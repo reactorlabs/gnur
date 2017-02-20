@@ -1576,7 +1576,7 @@ SEXP attribute_hidden do_subassign(SEXP call, SEXP op, SEXP args, SEXP rho)
     return do_subassign_dflt(call, op, ans, rho);
 }
 
-SEXP attribute_hidden do_subassign_dflt(SEXP call, SEXP op, SEXP args, SEXP rho)
+SEXP do_subassign_dflt(SEXP call, SEXP op, SEXP args, SEXP rho)
 {
     SEXP subs, x, y;
     int nsubs, oldtype; Rboolean S4;
@@ -1724,7 +1724,7 @@ SEXP attribute_hidden do_subassign2(SEXP call, SEXP op, SEXP args, SEXP rho)
     return do_subassign2_dflt(call, op, ans, rho);
 }
 
-SEXP attribute_hidden
+SEXP
 do_subassign2_dflt(SEXP call, SEXP op, SEXP args, SEXP rho)
 {
     SEXP dims, indx, names, newname, subs, x, xtop, xup, y, thesub = R_NilValue, xOrig = R_NilValue;

@@ -319,7 +319,7 @@ void endcontext(RCNTXT * cptr)
 
 /* findcontext - find the correct context */
 
-void attribute_hidden NORET findcontext(int mask, SEXP env, SEXP val)
+void NORET findcontext(int mask, SEXP env, SEXP val)
 {
     RCNTXT *cptr;
     cptr = R_GlobalContext;

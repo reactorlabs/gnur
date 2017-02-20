@@ -1422,7 +1422,6 @@ SEXP ddfind(int i, SEXP rho)
     return R_NilValue;
 }
 
-attribute_hidden
 SEXP ddfindVar(SEXP symbol, SEXP rho)
 {
     int i = ddVal(symbol);
@@ -1643,7 +1642,6 @@ void defineVar(SEXP symbol, SEXP value, SEXP rho)
   not have duplicit variables.
 */
 
-attribute_hidden
 void addMissingVarsToNewEnv(SEXP env, SEXP addVars)
 {
     if (addVars == R_NilValue) return;
@@ -2220,7 +2218,7 @@ static SEXP findRootPromise(SEXP p) {
     return p;
 }
 
-int attribute_hidden
+int
 R_isMissing(SEXP symbol, SEXP rho)
 {
     int ddv=0;
