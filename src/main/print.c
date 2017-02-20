@@ -816,6 +816,9 @@ void attribute_hidden PrintValueRec(SEXP s, SEXP env)
     case BCODESXP:
 	Rprintf("<bytecode: %p>\n", s);
 	break;
+    case EXTERNALSXP:
+	Rprintf("<external code: %p>\n", s);
+	break;
     case WEAKREFSXP:
 	Rprintf("<weak reference>\n");
 	break;

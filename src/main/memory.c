@@ -209,6 +209,7 @@ const char *sexptype2char(SEXPTYPE type) {
     case VECSXP:	return "VECSXP";
     case EXPRSXP:	return "EXPRSXP";
     case BCODESXP:	return "BCODESXP";
+    case EXTERNALSXP:	return "EXTERNALSXP";
     case EXTPTRSXP:	return "EXTPTRSXP";
     case WEAKREFSXP:	return "WEAKREFSXP";
     case S4SXP:		return "S4SXP";
@@ -645,6 +646,7 @@ static R_size_t R_NodesInUse = 0;
   case WEAKREFSXP: \
   case RAWSXP: \
   case S4SXP: \
+  case EXTERNALSXP: \
     break; \
   case STRSXP: \
   case EXPRSXP: \
@@ -990,6 +992,7 @@ static R_INLINE R_size_t getVecSizeInVEC(SEXP s)
 	size = XLENGTH(s) + 1;
 	break;
     case RAWSXP:
+    case EXTERNALSXP:
 	size = XLENGTH(s);
 	break;
     case LGLSXP:
@@ -2515,6 +2518,7 @@ SEXP allocVector3(SEXPTYPE type, R_xlen_t length, R_allocator_t *allocator)
     switch (type) {
     case NILSXP:
 	return R_NilValue;
+    case EXTERNALSXP:
     case RAWSXP:
 	size = BYTE2VEC(length);
 #if VALGRIND_LEVEL > 0
@@ -2762,7 +2766,7 @@ SEXP allocVector3(SEXPTYPE type, R_xlen_t length, R_allocator_t *allocator)
 	VALGRIND_MAKE_MEM_UNDEFINED(LOGICAL(s), actual_size);
     else if (type == CPLXSXP)
 	VALGRIND_MAKE_MEM_UNDEFINED(COMPLEX(s), actual_size);
-    else if (type == RAWSXP)
+    else if (type == RAWSXP || type == EXTERNALSXP)
 	VALGRIND_MAKE_MEM_UNDEFINED(RAW(s), actual_size);
 #endif
     return s;

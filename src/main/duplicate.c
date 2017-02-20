@@ -171,6 +171,7 @@ SEXP lazy_duplicate(SEXP s) {
     case BUILTINSXP:
     case EXTPTRSXP:
     case BCODESXP:
+    case EXTERNALSXP:
     case WEAKREFSXP:
     case CHARSXP:
     case PROMSXP:
@@ -221,6 +222,7 @@ Rboolean R_cycle_detected(SEXP s, SEXP child) {
 	case BUILTINSXP:
 	case EXTPTRSXP:
 	case BCODESXP:
+        case EXTERNALSXP:
 	case WEAKREFSXP:
 	    /* it's a cycle but one that is OK */
 	    return FALSE;
@@ -281,11 +283,14 @@ static SEXP duplicate1(SEXP s, Rboolean deep)
     case BUILTINSXP:
     case EXTPTRSXP:
     case BCODESXP:
+    case EXTERNALSXP:
     case WEAKREFSXP:
 	return s;
     case CLOSXP:
 	PROTECT(s);
-	if (R_jit_enabled > 1 && TYPEOF(BODY(s)) != BCODESXP) {
+	if (R_jit_enabled > 1 &&
+                ((!externalCodeToExpr && TYPEOF(BODY(s)) != BCODESXP) ||
+                 (externalCodeToExpr && TYPEOF(BODY(s)) != EXTERNALSXP))) {
 	    int old_enabled = R_jit_enabled;
 	    SEXP new_s;
 	    R_jit_enabled = 0;
