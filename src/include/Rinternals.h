@@ -447,6 +447,17 @@ typedef union { VECTOR_SEXPREC s; double align; } SEXPREC_ALIGN;
 #define ENVFLAGS(x)	((x)->sxpinfo.gp)	/* for environments */
 #define SET_ENVFLAGS(x,v)	(((x)->sxpinfo.gp)=(v))
 
+
+#define FRAME_CHANGED_MASK (1<<11)
+#define FRAME_LEAKED_MASK (1<<10)
+#define FRAME_CHANGED(x) (ENVFLAGS(x) & FRAME_CHANGED_MASK)
+#define FRAME_LEAKED(x) (ENVFLAGS(x) & FRAME_LEAKED_MASK)
+#define SET_FRAME_CHANGED(x) SET_ENVFLAGS(x, ENVFLAGS(x) | FRAME_CHANGED_MASK)
+#define SET_FRAME_LEAKED(x) SET_ENVFLAGS(x, ENVFLAGS(x) | FRAME_LEAKED_MASK)
+#define CLEAR_FRAME_CHANGED(x) SET_ENVFLAGS(x, ENVFLAGS(x) & ~FRAME_CHANGED_MASK)
+#define CLEAR_FRAME_LEAKED(x) SET_ENVFLAGS(x, ENVFLAGS(x) & ~FRAME_LEAKED_MASK)
+
+
 #else /* not USE_RINTERNALS */
 // ======================= not USE_RINTERNALS section
 
