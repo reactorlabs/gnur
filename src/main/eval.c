@@ -532,6 +532,17 @@ SEXP forcePromise(SEXP e)
     return PRVALUE(e);
 }
 
+static external_code_eval externalCodeEval = NULL;
+static external_code_compile externalCodeCompile = NULL;
+external_code_to_expr externalCodeToExpr = NULL;
+void registerExternalCode(external_code_eval eval,
+                          external_code_compile compiler,
+                          external_code_to_expr toExpr) {
+    externalCodeEval = eval;
+    externalCodeCompile = compiler;
+    externalCodeToExpr = toExpr;
+}
+
 /* Return value of "e" evaluated in "rho". */
 
 /* some places, e.g. deparse2buff, call this with a promise and rho = NULL */
@@ -623,6 +634,9 @@ SEXP eval(SEXP e, SEXP rho)
     case BCODESXP:
 	tmp = bcEval(e, rho, TRUE);
 	    break;
+    case EXTERNALSXP:
+        tmp = externalCodeEval(e, rho);
+        break;
     case SYMSXP:
 	if (e == R_DotsSymbol)
 	    error(_("'...' used in an incorrect context"));
@@ -1062,8 +1076,10 @@ static R_INLINE Rboolean R_CheckJIT(SEXP fun)
 
     SEXP body = BODY(fun);
 
-    if (R_jit_enabled > 0 && TYPEOF(body) != BCODESXP &&
-	! R_disable_bytecode && ! NOJIT(fun)) {
+    if (R_jit_enabled > 0 &&
+        ((!externalCodeToExpr && TYPEOF(body) != BCODESXP) ||
+            (externalCodeToExpr && TYPEOF(body) != EXTERNALSXP)) &&
+	    ! R_disable_bytecode && ! NOJIT(fun)) {
 
 	if (MAYBEJIT(fun)) {
 	    /* function marked as MAYBEJIT the first time now seen
@@ -1322,6 +1338,12 @@ SEXP attribute_hidden R_cmpfun1(SEXP fun)
 /* fun is modified in-place when compiled */
 static void R_cmpfun(SEXP fun)
 {
+    // TODO: can we make use of the jit cache? - JJ
+    if (externalCodeCompile) {
+        externalCodeCompile(fun, NULL);
+        return;
+    }
+
     R_exprhash_t hash = 0;
     if (jit_strategy != STRATEGY_NO_CACHE) {
 	hash = hashfun(fun);
@@ -1381,6 +1403,9 @@ static void R_cmpfun(SEXP fun)
 
 static SEXP R_compileExpr(SEXP expr, SEXP rho)
 {
+    if (externalCodeCompile)
+        return externalCodeCompile(expr, rho);
+
     int old_visible = R_Visible;
     SEXP packsym, funsym, quotesym;
     SEXP qexpr, call, fcall, val;
@@ -1416,6 +1441,10 @@ static Rboolean R_compileAndExecute(SEXP call, SEXP rho)
 	ans = TRUE;
     }
 
+    if (TYPEOF(code) == EXTERNALSXP) {
+        externalCodeEval(code, rho);
+        ans = TRUE;
+    }
     UNPROTECT(3);
     return ans;
 }
@@ -1743,7 +1772,7 @@ static R_INLINE SEXP R_execClosure(SEXP call, SEXP newrho, SEXP sysparent,
 	SET_RDEBUG(newrho, 1);
 	cntxt.browserfinish = 0; /* Don't want to inherit the "f" */
 	/* switch to interpreted version when debugging compiled code */
-	if (TYPEOF(body) == BCODESXP)
+	if (TYPEOF(body) == BCODESXP || TYPEOF(body) == EXTERNALSXP)
 	    body = bytecodeExpr(body);
 	Rprintf("debugging in: ");
 	PrintCall(call, rho);
@@ -4783,6 +4812,9 @@ static R_INLINE void BCNPOP_AND_END_CNTXT() {
 
 static SEXP bytecodeExpr(SEXP e)
 {
+    if (TYPEOF(e) == EXTERNALSXP) {
+        return externalCodeToExpr(e);
+    }
     if (isByteCode(e)) {
 	if (LENGTH(BCCONSTS(e)) > 0)
 	    return VECTOR_ELT(BCCONSTS(e), 0);
