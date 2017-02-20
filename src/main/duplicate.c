@@ -176,6 +176,7 @@ SEXP lazy_duplicate(SEXP s) {
     case BUILTINSXP:
     case EXTPTRSXP:
     case BCODESXP:
+    case EXTERNALSXP:
     case WEAKREFSXP:
     case CHARSXP:
     case PROMSXP:
@@ -226,6 +227,7 @@ Rboolean R_cycle_detected(SEXP s, SEXP child) {
 	case BUILTINSXP:
 	case EXTPTRSXP:
 	case BCODESXP:
+        case EXTERNALSXP:
 	case WEAKREFSXP:
 	    /* it's a cycle but one that is OK */
 	    return FALSE;
@@ -294,6 +296,7 @@ static SEXP duplicate1(SEXP s, Rboolean deep)
     case BUILTINSXP:
     case EXTPTRSXP:
     case BCODESXP:
+    case EXTERNALSXP:
     case WEAKREFSXP:
 	return s;
     case CLOSXP:

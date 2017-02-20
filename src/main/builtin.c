@@ -319,7 +319,7 @@ SEXP attribute_hidden do_envirgets(SEXP call, SEXP op, SEXP args, SEXP rho)
 	   ((! IS_ASSIGNMENT_CALL(call)) && MAYBE_REFERENCED(s)))
 	    /* this copies but does not duplicate args or code */
 	    s = duplicate(s);
-	if (TYPEOF(BODY(s)) == BCODESXP)
+	if (TYPEOF(BODY(s)) == BCODESXP || TYPEOF(BODY(s)) == EXTERNALSXP)
 	    /* switch to interpreted version if compiled */
 	    SET_BODY(s, R_ClosureExpr(CAR(args)));
 	SET_CLOENV(s, env);

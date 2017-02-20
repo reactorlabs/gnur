@@ -284,6 +284,7 @@ R_compute_identical(SEXP x, SEXP y, int flags)
     case ENVSXP:
     case SYMSXP:
     case WEAKREFSXP: /**** is this the best approach? */
+    case EXTERNALSXP:
 	return(x == y ? TRUE : FALSE);
     case BCODESXP:
 	return R_compute_identical(BCODE_CODE(x), BCODE_CODE(y), flags) &&
