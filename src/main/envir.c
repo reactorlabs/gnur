@@ -233,7 +233,7 @@ int attribute_hidden R_Newhashpjw(const char *s)
 */
 
 static void R_HashSet(int hashcode, SEXP symbol, SEXP table, SEXP value,
-		      Rboolean frame_locked)
+		      Rboolean frame_locked, SEXP rho)
 {
     SEXP chain;
 
@@ -243,6 +243,9 @@ static void R_HashSet(int hashcode, SEXP symbol, SEXP table, SEXP value,
     /* Search for the value in the chain */
     for (; !ISNULL(chain); chain = CDR(chain))
 	if (TAG(chain) == symbol) {
+            if (rho)
+                if (TYPEOF(BINDING_VALUE(chain)) == PROMSXP)
+                    SET_FRAME_CHANGED(rho);
 	    SET_BINDING_VALUE(chain, value);
 	    SET_MISSING(chain, 0);	/* Over-ride for new value */
 	    return;
@@ -251,6 +254,8 @@ static void R_HashSet(int hashcode, SEXP symbol, SEXP table, SEXP value,
 	error(_("cannot add bindings to a locked environment"));
     if (ISNULL(chain))
 	SET_HASHPRI(table, HASHPRI(table) + 1);
+    if (rho)
+        SET_FRAME_CHANGED(rho);
     /* Add the value into the chain */
     SET_VECTOR_ELT(table, hashcode, CONS(value, VECTOR_ELT(table, hashcode)));
     SET_TAG(VECTOR_ELT(table, hashcode), symbol);
@@ -739,7 +744,7 @@ static void R_AddGlobalCache(SEXP symbol, SEXP place)
 {
     int oldpri = HASHPRI(R_GlobalCache);
     R_HashSet(hashIndex(symbol, R_GlobalCache), symbol, R_GlobalCache, place,
-	      FALSE);
+	      FALSE, NULL);
 #ifdef FAST_BASE_CACHE_LOOKUP
     if (symbol == place)
 	SET_BASE_SYM_CACHED(symbol);
@@ -1469,6 +1474,38 @@ SEXP findFun(SEXP symbol, SEXP rho)
 }
 
 
+static void envAnalysis(SEXP value, SEXP env) {
+    SEXP leaked = NULL;
+    if (TYPEOF(value) == ENVSXP)
+        leaked = value;
+    else if (TYPEOF(value) == CLOSXP)
+        leaked = CLOENV(value);
+    else if (TYPEOF(value) == PROMSXP)
+        leaked = PRENV(value);
+
+    if (!leaked)
+        return;
+
+    // If the we assign an environment to one of its child environments this is
+    // not a leak. Only if we assign to a parent or an unrelated environment.
+    // In the case of Promises its always considered a leak because its hard to
+    // reason where this promise will be evaluated.
+    SEXP checkParent = env;
+    if (TYPEOF(value) != PROMSXP)
+        while (checkParent != R_NilValue) {
+            if (checkParent == leaked)
+                return;
+            checkParent = ENCLOS(checkParent);
+        }
+
+    // An env has access to its parent, therefore this whole sub-tree is now
+    // leaked
+    while (leaked != R_NilValue) {
+        SET_FRAME_LEAKED(leaked);
+        leaked = ENCLOS(leaked);
+    }
+}
+
 /*----------------------------------------------------------------------
 
   defineVar
@@ -1487,6 +1524,8 @@ void defineVar(SEXP symbol, SEXP value, SEXP rho)
 
     if (rho == R_EmptyEnv)
 	error(_("cannot assign values in the empty environment"));
+
+    envAnalysis(value, rho);
 
     if(IS_USER_DATABASE(rho)) {
 	R_ObjectTable *table;
@@ -1517,6 +1556,8 @@ void defineVar(SEXP symbol, SEXP value, SEXP rho)
 	    frame = FRAME(rho);
 	    while (frame != R_NilValue) {
 		if (TAG(frame) == symbol) {
+                    if (TYPEOF(BINDING_VALUE(frame)) == PROMSXP)
+                        SET_FRAME_CHANGED(rho);
 		    SET_BINDING_VALUE(frame, value);
 		    SET_MISSING(frame, 0);	/* Over-ride */
 		    return;
@@ -1525,6 +1566,7 @@ void defineVar(SEXP symbol, SEXP value, SEXP rho)
 	    }
 	    if (FRAME_IS_LOCKED(rho))
 		error(_("cannot add bindings to a locked environment"));
+            SET_FRAME_CHANGED(rho);
 	    SET_FRAME(rho, CONS(value, FRAME(rho)));
 	    SET_TAG(FRAME(rho), symbol);
 	}
@@ -1536,7 +1578,7 @@ void defineVar(SEXP symbol, SEXP value, SEXP rho)
 	    }
 	    hashcode = HASHVALUE(c) % HASHSIZE(HASHTAB(rho));
 	    R_HashSet(hashcode, symbol, HASHTAB(rho), value,
-		      FRAME_IS_LOCKED(rho));
+		      FRAME_IS_LOCKED(rho), rho);
 	    if (R_HashSizeCheck(HASHTAB(rho)))
 		SET_HASHTAB(rho, R_HashResize(HASHTAB(rho)));
 	}
@@ -1616,6 +1658,8 @@ static SEXP setVarInFrame(SEXP rho, SEXP symbol, SEXP value)
     if (rho == R_GlobalEnv) R_DirtyImage = 1;
     if (rho == R_EmptyEnv) return R_NilValue;
 
+    envAnalysis(value, rho);
+
     if(IS_USER_DATABASE(rho)) {
 	/* FIXME: This does not behave as described */
 	R_ObjectTable *table;
@@ -1638,6 +1682,9 @@ static SEXP setVarInFrame(SEXP rho, SEXP symbol, SEXP value)
 	frame = FRAME(rho);
 	while (frame != R_NilValue) {
 	    if (TAG(frame) == symbol) {
+                // Guard against code overriding arguments
+                if (TYPEOF(BINDING_VALUE(frame)) == PROMSXP)
+                    SET_FRAME_CHANGED(rho);
 		if (rho == R_GlobalEnv) R_DirtyImage = 1;
 		SET_BINDING_VALUE(frame, value);
 		SET_MISSING(frame, 0);	/* same as defineVar */
@@ -1655,6 +1702,9 @@ static SEXP setVarInFrame(SEXP rho, SEXP symbol, SEXP value)
 	hashcode = HASHVALUE(c) % HASHSIZE(HASHTAB(rho));
 	frame = R_HashGetLoc(hashcode, symbol, HASHTAB(rho));
 	if (frame != R_NilValue) {
+            // Guard against code overriding arguments
+            if (TYPEOF(BINDING_VALUE(frame)) == PROMSXP)
+                SET_FRAME_CHANGED(rho);
 	    if (rho == R_GlobalEnv) R_DirtyImage = 1;
 	    SET_BINDING_VALUE(frame, value);
 	    SET_MISSING(frame, 0);	/* same as defineVar */
@@ -1847,6 +1897,10 @@ static int RemoveVariable(SEXP name, int hashcode, SEXP env)
 #endif
 	}
     }
+
+    if (found)
+        SET_FRAME_CHANGED(env);
+
     return found;
 }
 
@@ -3203,6 +3257,7 @@ void R_unLockBinding(SEXP sym, SEXP env)
     if (TYPEOF(env) != ENVSXP &&
 	TYPEOF((env = simple_as_environment(env))) != ENVSXP)
 	error(_("not an environment"));
+    SET_FRAME_CHANGED(env);
     if (env == R_BaseEnv || env == R_BaseNamespace)
 	/* It is a symbol, so must have a binding even if it is
 	   R_UnboundSymbol */
@@ -3226,6 +3281,7 @@ void R_MakeActiveBinding(SEXP sym, SEXP fun, SEXP env)
     if (TYPEOF(env) != ENVSXP &&
 	TYPEOF((env = simple_as_environment(env))) != ENVSXP)
 	error(_("not an environment"));
+    SET_FRAME_CHANGED(env);
     if (env == R_BaseEnv || env == R_BaseNamespace) {
 	if (SYMVALUE(sym) != R_UnboundValue && ! IS_ACTIVE_BINDING(sym))
 	    error(_("symbol already has a regular binding"));
