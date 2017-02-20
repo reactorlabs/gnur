@@ -440,7 +440,6 @@ SEXP dispatchMethod(SEXP op, SEXP sxp, SEXP dotClass, RCNTXT *cptr, SEXP method,
     return ans;
 }
 
-attribute_hidden
 int usemethod(const char *generic, SEXP obj, SEXP call, SEXP args,
 	      SEXP rho, SEXP callrho, SEXP defrho, SEXP *ans)
 {
@@ -1501,7 +1500,6 @@ static SEXP get_this_generic(SEXP args)
 /* Could there be methods for this op?	Checks
    only whether methods are currently being dispatched and, if so,
    whether methods are currently defined for this op. */
-attribute_hidden
 Rboolean R_has_methods(SEXP op)
 {
     R_stdGen_ptr_t ptr = R_get_standardGeneric_ptr(); int offset;
@@ -1544,7 +1542,7 @@ void R_set_quick_method_check(R_stdGen_ptr_t value)
    promises, but not from the other two: there all the arguments have
    already been evaluated.
  */
-SEXP attribute_hidden
+SEXP
 R_possible_dispatch(SEXP call, SEXP op, SEXP args, SEXP rho,
 		    Rboolean promisedArgs)
 {

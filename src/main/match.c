@@ -181,7 +181,7 @@ SEXP attribute_hidden matchArgExact(SEXP tag, SEXP * list)
 /* Renamed to matchArgs_NR to reflect that it returns a
    non-reference-tracking list */
 
-SEXP attribute_hidden matchArgs_NR(SEXP formals, SEXP supplied, SEXP call)
+SEXP matchArgs_NR(SEXP formals, SEXP supplied, SEXP call)
 {
     Rboolean seendots;
     int i, arg_i = 0;

@@ -1011,9 +1011,7 @@ LibExtern SEXP	R_MissingArg;	    /* Missing argument marker */
 LibExtern SEXP	R_InBCInterpreter;  /* To be found in BC interp. state
 				       (marker) */
 LibExtern SEXP	R_CurrentExpression; /* Use current expression (marker) */
-#ifdef __MAIN__
-attribute_hidden
-#else
+#ifndef __MAIN__
 extern
 #endif
 SEXP	R_RestartToken;     /* Marker for restarted function calls */
@@ -1693,6 +1691,185 @@ void R_orderVector1(int *indx, int n, SEXP x,       Rboolean nalast, Rboolean de
 #define xlengthgets		Rf_xlengthgets
 
 #endif
+
+
+// RIR: Moved here from Defn.h
+
+#ifdef __MAIN__
+#define externRir
+#else
+#define externRir extern
+#endif
+
+/* The byte code engine uses a typed stack. The typed stack's entries
+   consist of a tag and a union. An entry can represent a standard
+   SEXP value (tag = 0) or an unboxed scalar value.  For now real,
+   integer, and logical values are supported. It would in principle be
+   possible to support complex scalars and short scalar strings, but
+   it isn't clear if this is worth while.
+
+   In addition to unboxed values the typed stack can hold partially
+   evaluated or incomplete allocated values. For now this is only used
+   for holding a short representation of an integer sequence as produce
+   by the colon operator, seq_len, or seq_along, and as consumed by
+   compiled 'for' loops. This could be used more extensively in the
+   future, though the ALTREP framework may be a better choice.
+
+   Allocating on the stack memory is also supported; this is currently
+   used for jump buffers.
+*/
+typedef struct {
+    int tag;
+    int flags;
+    union {
+	int ival;
+	double dval;
+	SEXP sxpval;
+    } u;
+} R_bcstack_t;
+
+
+#define R_BCNODESTACKSIZE 200000
+externRir R_bcstack_t *R_BCNodeStackTop, *R_BCNodeStackEnd;
+externRir R_bcstack_t *R_BCNodeStackBase;
+externRir R_bcstack_t *R_BCProtTop;
+
+#include <setjmp.h>
+# define SIGJMP_BUF sigjmp_buf
+# define SIGSETJMP(x,s) sigsetjmp(x,s)
+# define SIGLONGJMP(x,i) siglongjmp(x,i)
+# define JMP_BUF sigjmp_buf
+# define SETJMP(x) sigsetjmp(x,0)
+# define LONGJMP(x,i) siglongjmp(x,i)
+
+/* Evaluation Context Structure */
+typedef struct RCNTXT {
+    struct RCNTXT *nextcontext;	/* The next context up the chain */
+    int callflag;		/* The context "type" */
+    JMP_BUF cjmpbuf;		/* C stack and register information */
+    int cstacktop;		/* Top of the pointer protection stack */
+    int evaldepth;	        /* evaluation depth at inception */
+    SEXP promargs;		/* Promises supplied to closure */
+    SEXP callfun;		/* The closure called */
+    SEXP sysparent;		/* environment the closure was called from */
+    SEXP call;			/* The call that effected this context*/
+    SEXP cloenv;		/* The environment */
+    SEXP conexit;		/* Interpreted "on.exit" code */
+    void (*cend)(void *);	/* C "on.exit" thunk */
+    void *cenddata;		/* data for C "on.exit" thunk */
+    void *vmax;		        /* top of R_alloc stack */
+    int intsusp;                /* interrupts are suspended */
+    int gcenabled;		/* R_GCEnabled value */
+    int bcintactive;            /* R_BCIntActive value */
+    SEXP bcbody;                /* R_BCbody value */
+    void* bcpc;                 /* R_BCpc value */
+    SEXP handlerstack;          /* condition handler stack */
+    SEXP restartstack;          /* stack of available restarts */
+    struct RPRSTACK *prstack;   /* stack of pending promises */
+    R_bcstack_t *nodestack;
+    R_bcstack_t *bcprottop;
+    SEXP srcref;	        /* The source line in effect */
+    int browserfinish;          /* should browser finish this context without
+                                   stopping */
+    SEXP returnValue;           /* only set during on.exit calls */
+    struct RCNTXT *jumptarget;	/* target for a continuing jump */
+    int jumpmask;               /* associated LONGJMP argument */
+} RCNTXT, *context;
+
+/* The Various Context Types.
+
+ * In general the type is a bitwise OR of the values below.
+ * Note that CTXT_LOOP is already the or of CTXT_NEXT and CTXT_BREAK.
+ * Only functions should have the third bit turned on;
+ * this allows us to move up the context stack easily
+ * with either RETURN's or GENERIC's or RESTART's.
+ * If you add a new context type for functions make sure
+ *   CTXT_NEWTYPE & CTXT_FUNCTION > 0
+ */
+enum {
+    CTXT_TOPLEVEL = 0,
+    CTXT_NEXT	  = 1,
+    CTXT_BREAK	  = 2,
+    CTXT_LOOP	  = 3,	/* break OR next target */
+    CTXT_FUNCTION = 4,
+    CTXT_CCODE	  = 8,
+    CTXT_RETURN	  = 12,
+    CTXT_BROWSER  = 16,
+    CTXT_GENERIC  = 20,
+    CTXT_RESTART  = 32,
+    CTXT_BUILTIN  = 64, /* used in profiling */
+    CTXT_UNWIND   = 128
+};
+
+/*
+TOP   0 0 0 0 0 0  = 0
+NEX   1 0 0 0 0 0  = 1
+BRE   0 1 0 0 0 0  = 2
+LOO   1 1 0 0 0 0  = 3
+FUN   0 0 1 0 0 0  = 4
+CCO   0 0 0 1 0 0  = 8
+BRO   0 0 0 0 1 0  = 16
+RET   0 0 1 1 0 0  = 12
+GEN   0 0 1 0 1 0  = 20
+RES   0 0 0 0 0 0 1 = 32
+BUI   0 0 0 0 0 0 0 1 = 64
+*/
+
+
+
+externRir SEXP	R_ReturnedValue;    /* Slot for return-ing values */
+externRir RCNTXT* R_GlobalContext;    /* The global context */
+
+# define begincontext		Rf_begincontext
+# define ddfindVar		Rf_ddfindVar
+# define endcontext		Rf_endcontext
+# define findcontext		Rf_findcontext
+# define matchArgs_NR		Rf_matchArgs_NR
+# define matchArgs_RC		Rf_matchArgs_RC
+# define mkPROMISE		Rf_mkPROMISE
+# define usemethod		Rf_usemethod
+
+SEXP ddfindVar(SEXP, SEXP);
+void begincontext(RCNTXT*, int, SEXP, SEXP, SEXP, SEXP, SEXP);
+void endcontext(RCNTXT*);
+void NORET findcontext(int, SEXP, SEXP);
+SEXP matchArgs_NR(SEXP, SEXP, SEXP);
+SEXP matchArgs_RC(SEXP, SEXP, SEXP);
+SEXP mkPROMISE(SEXP, SEXP);
+int usemethod(const char *, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP*);
+
+
+SEXP forcePromise(SEXP);
+int R_isMissing(SEXP symbol, SEXP rho);
+Rboolean R_has_methods(SEXP);
+SEXP R_possible_dispatch(SEXP, SEXP, SEXP, SEXP, Rboolean);
+
+
+void (SET_SPECIAL_SYMBOL)(SEXP b);
+void (UNSET_SPECIAL_SYMBOL)(SEXP b);
+Rboolean (IS_SPECIAL_SYMBOL)(SEXP b);
+void (SET_NO_SPECIAL_SYMBOLS)(SEXP b);
+void (UNSET_NO_SPECIAL_SYMBOLS)(SEXP b);
+Rboolean (NO_SPECIAL_SYMBOLS)(SEXP b);
+
+
+extern SEXP do_subassign_dflt(SEXP call, SEXP op, SEXP args, SEXP rho);
+extern SEXP do_subassign2_dflt(SEXP call, SEXP op, SEXP args, SEXP rho);
+extern SEXP do_subset_dflt(SEXP call, SEXP op, SEXP args, SEXP rho);
+extern SEXP do_subset2_dflt(SEXP call, SEXP op, SEXP args, SEXP rho);
+
+
+typedef struct { SEXP cell; } R_varloc_t; /* use struct to prevent casting */
+#define R_VARLOC_IS_NULL(loc) ((loc).cell == NULL)
+R_varloc_t R_findVarLocInFrame(SEXP, SEXP);
+
+
+typedef SEXP (*external_code_eval)(SEXP, SEXP);
+typedef SEXP (*external_code_compile)(SEXP, SEXP);
+typedef SEXP (*external_code_to_expr)(SEXP);
+extern external_code_to_expr externalCodeToExpr;
+extern void registerExternalCode(external_code_eval, external_code_compile, external_code_to_expr);
+
 
 /* Defining NO_RINLINEDFUNS disables use to simulate platforms where
    this is not available */
