@@ -685,7 +685,7 @@ static R_INLINE R_xlen_t scalarIndex(SEXP s)
     else return -1;
 }
 
-SEXP attribute_hidden do_subset_dflt(SEXP call, SEXP op, SEXP args, SEXP rho)
+SEXP do_subset_dflt(SEXP call, SEXP op, SEXP args, SEXP rho)
 {
     SEXP ans, ax, px, x, subs;
     int drop, i, nsubs, type;
@@ -916,7 +916,7 @@ SEXP attribute_hidden do_subset2(SEXP call, SEXP op, SEXP args, SEXP rho)
     return do_subset2_dflt(call, op, ans, rho);
 }
 
-SEXP attribute_hidden do_subset2_dflt(SEXP call, SEXP op, SEXP args, SEXP rho)
+SEXP do_subset2_dflt(SEXP call, SEXP op, SEXP args, SEXP rho)
 {
     SEXP ans, dims, dimnames, indx, subs, x;
     int i, ndims, nsubs;

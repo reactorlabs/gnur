@@ -184,7 +184,7 @@ SEXP attribute_hidden matchArgExact(SEXP tag, SEXP * list)
 /* MULTIPLE_MATCHES was added by RI in Jan 2005 but never activated:
    code in R-2-8-branch */
 
-SEXP attribute_hidden matchArgs(SEXP formals, SEXP supplied, SEXP call)
+SEXP matchArgs(SEXP formals, SEXP supplied, SEXP call)
 {
     Rboolean seendots;
     int i, arg_i = 0;

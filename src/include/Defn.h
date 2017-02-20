@@ -457,46 +457,7 @@ void (SET_BASE_SYM_CACHED)(SEXP b);
 void (UNSET_BASE_SYM_CACHED)(SEXP b);
 Rboolean (BASE_SYM_CACHED)(SEXP b);
 
-void (SET_SPECIAL_SYMBOL)(SEXP b);
-void (UNSET_SPECIAL_SYMBOL)(SEXP b);
-Rboolean (IS_SPECIAL_SYMBOL)(SEXP b);
-void (SET_NO_SPECIAL_SYMBOLS)(SEXP b);
-void (UNSET_NO_SPECIAL_SYMBOLS)(SEXP b);
-Rboolean (NO_SPECIAL_SYMBOLS)(SEXP b);
-
 #endif /* USE_RINTERNALS */
-
-#define TYPED_STACK
-#ifdef TYPED_STACK
-/* The typed stack's entries consist of a tag and a union. An entry
-   can represent a standard SEXP value (tag = 0) or an unboxed scalar
-   value. For now real, integer, and logical values are supported. It
-   would in principle be possible to support complex scalars and short
-   scalar strings, but it isn't clear if this is worth while.
-
-   In addition to unboxed values the typed stack can hold partially
-   evaluated or incomplete allocated values. For now this is only used
-   for holding a short representation of an integer sequence as produce
-   by the colon operator, seq_len, or seq_along, and as consumed by
-   compiled 'for' loops. This could be used more extensively in the
-   future.
-*/
-typedef struct {
-    int tag;
-    union {
-	int ival;
-	double dval;
-	SEXP sxpval;
-    } u;
-} R_bcstack_t;
-# define PARTIALSXP_MASK (~255)
-# define IS_PARTIAL_SXP_TAG(x) ((x) & PARTIALSXP_MASK)
-#else
-typedef SEXP R_bcstack_t;
-#endif
-#ifdef BC_INT_STACK
-typedef union { void *p; int i; } IStackval;
-#endif
 
 #ifdef R_USE_SIGNALS
 /* Stack entry for pending promises */
@@ -504,76 +465,6 @@ typedef struct RPRSTACK {
     SEXP promise;
     struct RPRSTACK *next;
 } RPRSTACK;
-
-/* Evaluation Context Structure */
-typedef struct RCNTXT {
-    struct RCNTXT *nextcontext;	/* The next context up the chain */
-    int callflag;		/* The context "type" */
-    JMP_BUF cjmpbuf;		/* C stack and register information */
-    int cstacktop;		/* Top of the pointer protection stack */
-    int evaldepth;	        /* evaluation depth at inception */
-    SEXP promargs;		/* Promises supplied to closure */
-    SEXP callfun;		/* The closure called */
-    SEXP sysparent;		/* environment the closure was called from */
-    SEXP call;			/* The call that effected this context*/
-    SEXP cloenv;		/* The environment */
-    SEXP conexit;		/* Interpreted "on.exit" code */
-    void (*cend)(void *);	/* C "on.exit" thunk */
-    void *cenddata;		/* data for C "on.exit" thunk */
-    void *vmax;		        /* top of R_alloc stack */
-    int intsusp;                /* interrupts are suspended */
-    int gcenabled;		/* R_GCenabled value */
-    SEXP handlerstack;          /* condition handler stack */
-    SEXP restartstack;          /* stack of available restarts */
-    struct RPRSTACK *prstack;   /* stack of pending promises */
-    R_bcstack_t *nodestack;
-#ifdef BC_INT_STACK
-    IStackval *intstack;
-#endif
-    SEXP srcref;	        /* The source line in effect */
-    int browserfinish;     /* should browser finish this context without stopping */
-    SEXP returnValue;			/* only set during on.exit calls */
-    struct RCNTXT *jumptarget;	/* target for a continuing jump */
-    int jumpmask;               /* associated LONGJMP argument */
-} RCNTXT, *context;
-
-/* The Various Context Types.
-
- * In general the type is a bitwise OR of the values below.
- * Note that CTXT_LOOP is already the or of CTXT_NEXT and CTXT_BREAK.
- * Only functions should have the third bit turned on;
- * this allows us to move up the context stack easily
- * with either RETURN's or GENERIC's or RESTART's.
- * If you add a new context type for functions make sure
- *   CTXT_NEWTYPE & CTXT_FUNCTION > 0
- */
-enum {
-    CTXT_TOPLEVEL = 0,
-    CTXT_NEXT	  = 1,
-    CTXT_BREAK	  = 2,
-    CTXT_LOOP	  = 3,	/* break OR next target */
-    CTXT_FUNCTION = 4,
-    CTXT_CCODE	  = 8,
-    CTXT_RETURN	  = 12,
-    CTXT_BROWSER  = 16,
-    CTXT_GENERIC  = 20,
-    CTXT_RESTART  = 32,
-    CTXT_BUILTIN  = 64  /* used in profiling */
-};
-
-/*
-TOP   0 0 0 0 0 0  = 0
-NEX   1 0 0 0 0 0  = 1
-BRE   0 1 0 0 0 0  = 2
-LOO   1 1 0 0 0 0  = 3
-FUN   0 0 1 0 0 0  = 4
-CCO   0 0 0 1 0 0  = 8
-BRO   0 0 0 0 1 0  = 16
-RET   0 0 1 1 0 0  = 12
-GEN   0 0 1 0 1 0  = 20
-RES   0 0 0 0 0 0 1 = 32
-BUI   0 0 0 0 0 0 0 1 = 64
-*/
 
 #define IS_RESTART_BIT_SET(flags) ((flags) & CTXT_RESTART)
 #define SET_RESTART_BIT_ON(flags) (flags |= CTXT_RESTART)
@@ -655,12 +546,10 @@ LibExtern SEXP*	R_PPStack;	    /* The pointer protection stack */
 
 /* Evaluation Environment */
 extern0 SEXP	R_CurrentExpr;	    /* Currently evaluating expression */
-extern0 SEXP	R_ReturnedValue;    /* Slot for return-ing values */
 extern0 SEXP*	R_SymbolTable;	    /* The symbol table */
 #ifdef R_USE_SIGNALS
 extern0 RCNTXT R_Toplevel;	      /* Storage for the toplevel context */
 extern0 RCNTXT* R_ToplevelContext;  /* The toplevel context */
-LibExtern RCNTXT* R_GlobalContext;    /* The global context */
 extern0 RCNTXT* R_SessionContext;   /* The session toplevel context */
 extern0 RCNTXT* R_ExitContext;      /* The active context for on.exit processing */
 #endif
@@ -764,12 +653,6 @@ extern0 double elapsedLimitValue       	INI_as(-1.0);
 
 void resetTimeLimits(void);
 
-#define R_BCNODESTACKSIZE 100000
-extern0 R_bcstack_t *R_BCNodeStackBase, *R_BCNodeStackTop, *R_BCNodeStackEnd;
-#ifdef BC_INT_STACK
-# define R_BCINTSTACKSIZE 10000
-extern0 IStackval *R_BCIntStackBase, *R_BCIntStackTop, *R_BCIntStackEnd;
-#endif
 extern0 int R_jit_enabled INI_as(0);
 extern0 int R_compile_pkgs INI_as(0);
 extern SEXP R_cmpfun(SEXP);
@@ -831,7 +714,6 @@ LibExtern SEXP R_LogicalNAValue INI_as(NULL);
 
 # define allocCharsxp		Rf_allocCharsxp
 # define asVecSize		Rf_asVecSize
-# define begincontext		Rf_begincontext
 # define BindDomain		Rf_BindDomain
 # define check_stack_balance	Rf_check_stack_balance
 # define check1arg		Rf_check1arg
@@ -861,12 +743,11 @@ LibExtern SEXP R_LogicalNAValue INI_as(NULL);
 # define EncodeReal2            Rf_EncodeReal2
 # define EncodeString           Rf_EncodeString
 # define EnsureString 		Rf_EnsureString
-# define endcontext		Rf_endcontext
+# define envlength		Rf_envlength
 # define ErrorMessage		Rf_ErrorMessage
 # define evalList		Rf_evalList
 # define evalListKeepMissing	Rf_evalListKeepMissing
 # define factorsConform		Rf_factorsConform
-# define findcontext		Rf_findcontext
 # define findVar1		Rf_findVar1
 # define FrameClassFix		Rf_FrameClassFix
 # define framedepth		Rf_framedepth
@@ -911,7 +792,6 @@ LibExtern SEXP R_LogicalNAValue INI_as(NULL);
 # define mat2indsub		Rf_mat2indsub
 # define matchArg		Rf_matchArg
 # define matchArgExact		Rf_matchArgExact
-# define matchArgs		Rf_matchArgs
 # define matchPar		Rf_matchPar
 # define Mbrtowc		Rf_mbrtowc
 # define mbtoucs		Rf_mbtoucs
@@ -919,7 +799,6 @@ LibExtern SEXP R_LogicalNAValue INI_as(NULL);
 # define memtrace_report	Rf_memtrace_report
 # define mkCLOSXP		Rf_mkCLOSXP
 # define mkFalse		Rf_mkFalse
-# define mkPROMISE		Rf_mkPROMISE
 # define mkQUOTE		Rf_mkQUOTE
 # define mkSYMSXP		Rf_mkSYMSXP
 # define mkTrue			Rf_mkTrue
@@ -962,7 +841,6 @@ LibExtern SEXP R_LogicalNAValue INI_as(NULL);
 # define tspgets		Rf_tspgets
 # define type2symbol		Rf_type2symbol
 # define unbindVar		Rf_unbindVar
-# define usemethod		Rf_usemethod
 # define ucstomb		Rf_ucstomb
 # define ucstoutf8		Rf_ucstoutf8
 # define utf8toucs		Rf_utf8toucs
@@ -1003,9 +881,6 @@ Rboolean R_HiddenFile(const char *);
 double	R_FileMtime(const char *);
 
 /* environment cell access */
-typedef struct { SEXP cell; } R_varloc_t; /* use struct to prevent casting */
-#define R_VARLOC_IS_NULL(loc) ((loc).cell == NULL)
-R_varloc_t R_findVarLocInFrame(SEXP, SEXP);
 SEXP R_GetVarLocValue(R_varloc_t);
 SEXP R_GetVarLocSymbol(R_varloc_t);
 Rboolean R_GetVarLocMISSING(R_varloc_t);
@@ -1072,7 +947,6 @@ R_xlen_t any_duplicated3(SEXP, SEXP, Rboolean);
 SEXP evalList(SEXP, SEXP, SEXP, int);
 SEXP evalListKeepMissing(SEXP, SEXP);
 int factorsConform(SEXP, SEXP);
-void NORET findcontext(int, SEXP, SEXP);
 SEXP findVar1(SEXP, SEXP, SEXPTYPE, int);
 void FrameClassFix(SEXP);
 SEXP frameSubscript(int, SEXP, SEXP);
@@ -1088,9 +962,7 @@ void InitBaseEnv(void);
 void InitGlobalEnv(void);
 Rboolean R_current_trace_state(void);
 Rboolean R_current_debug_state(void);
-Rboolean R_has_methods(SEXP);
 void R_InitialData(void);
-SEXP R_possible_dispatch(SEXP, SEXP, SEXP, SEXP, Rboolean);
 void InitGraphics(void);
 void InitMemory(void);
 void InitNames(void);
@@ -1113,13 +985,11 @@ SEXP markKnown(const char *, SEXP);
 SEXP mat2indsub(SEXP, SEXP, SEXP);
 SEXP matchArg(SEXP, SEXP*);
 SEXP matchArgExact(SEXP, SEXP*);
-SEXP matchArgs(SEXP, SEXP, SEXP);
 SEXP matchPar(const char *, SEXP*);
 void memtrace_report(void *, void *);
 SEXP mkCLOSXP(SEXP, SEXP, SEXP);
 SEXP mkFalse(void);
 SEXP mkPRIMSXP (int, int);
-SEXP mkPROMISE(SEXP, SEXP);
 SEXP R_mkEVPROMISE(SEXP, SEXP);
 SEXP R_mkEVPROMISE_NR(SEXP, SEXP);
 SEXP mkQUOTE(SEXP);
@@ -1164,7 +1034,6 @@ int R_SetOptionWarn(int);
 int R_SetOptionWidth(int);
 void R_Suicide(const char *);
 void R_getProcTime(double *data);
-int R_isMissing(SEXP symbol, SEXP rho);
 const char *sexptype2char(SEXPTYPE type);
 void sortVector(SEXP, Rboolean);
 void SrcrefPrompt(const char *, SEXP);
@@ -1181,13 +1050,10 @@ void unbindVar(SEXP, SEXP);
 void unmarkPhase(void);
 #endif
 SEXP R_LookupMethod(SEXP, SEXP, SEXP, SEXP);
-int usemethod(const char *, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP*);
 SEXP vectorIndex(SEXP, SEXP, int, int, int, SEXP, Rboolean);
 
 #ifdef R_USE_SIGNALS
-void begincontext(RCNTXT*, int, SEXP, SEXP, SEXP, SEXP, SEXP);
 SEXP dynamicfindVar(SEXP, RCNTXT*);
-void endcontext(RCNTXT*);
 int framedepth(RCNTXT*);
 void R_InsertRestartHandlers(RCNTXT *, Rboolean);
 void NORET R_JumpToContext(RCNTXT *, int, SEXP);
