@@ -279,6 +279,9 @@ else
     valgrind*)
       args_ok=yes
       ;;
+    rr*)
+      args_ok=yes
+      ;;
   esac
   if test -n "${args}${*}" && test "${args_ok}" = no; then
     args=`expr "${args} ${*}" : " *\(.*\)"`
