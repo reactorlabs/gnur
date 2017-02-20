@@ -129,6 +129,8 @@ typedef unsigned int SEXPTYPE;
 #define RAWSXP      24    /* raw bytes */
 #define S4SXP       25    /* S4, non-vector */
 
+#define EXTERNALSXP 26    /* externally executed bytecode */
+
 /* used for detecting PROTECT issues in memory.c */
 #define NEWSXP      30    /* fresh node creaed in new page */
 #define FREESXP     31    /* node released by GC */
@@ -646,7 +648,7 @@ void (SET_HASHVALUE)(SEXP x, int v);
 #define BCODE_CODE(x)	CAR(x)
 #define BCODE_CONSTS(x) CDR(x)
 #define BCODE_EXPR(x)	TAG(x)
-#define isByteCode(x)	(TYPEOF(x)==BCODESXP)
+#define isByteCode(x)	(TYPEOF(x)==BCODESXP || TYPEOF(x)==EXTERNALSXP)
 
 /* Pointer Protection and Unprotection */
 #define PROTECT(s)	Rf_protect(s)

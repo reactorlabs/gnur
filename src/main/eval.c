@@ -469,6 +469,17 @@ SEXP forcePromise(SEXP e)
     return PRVALUE(e);
 }
 
+static external_code_eval externalCodeEval = NULL;
+static external_code_compile externalCodeCompile = NULL;
+external_code_to_expr externalCodeToExpr = NULL;
+void registerExternalCode(external_code_eval eval,
+                          external_code_compile compiler,
+                          external_code_to_expr toExpr) {
+    externalCodeEval = eval;
+    externalCodeCompile = compiler;
+    externalCodeToExpr = toExpr;
+}
+
 /* Return value of "e" evaluated in "rho". */
 
 /* some places, e.g. deparse2buff, call this with a promise and rho = NULL */
@@ -557,6 +568,9 @@ SEXP eval(SEXP e, SEXP rho)
     case BCODESXP:
 	tmp = bcEval(e, rho, TRUE);
 	    break;
+    case EXTERNALSXP:
+        tmp = externalCodeEval(e, rho);
+        break;
     case SYMSXP:
 	if (e == R_DotsSymbol)
 	    error(_("'...' used in an incorrect context"));
@@ -766,6 +780,9 @@ void attribute_hidden R_init_jit_enabled(void)
 
 SEXP attribute_hidden R_cmpfun(SEXP fun)
 {
+    if (externalCodeCompile)
+        return externalCodeCompile(fun, NULL);
+
     SEXP packsym, funsym, call, fcall, val;
 
     packsym = install("compiler");
@@ -780,6 +797,9 @@ SEXP attribute_hidden R_cmpfun(SEXP fun)
 
 static SEXP R_compileExpr(SEXP expr, SEXP rho)
 {
+    if (externalCodeCompile)
+        return externalCodeCompile(expr, rho);
+
     SEXP packsym, funsym, quotesym;
     SEXP qexpr, call, fcall, val;
 
@@ -806,7 +826,10 @@ static SEXP R_compileAndExecute(SEXP call, SEXP rho)
     PROTECT(code = R_compileExpr(call, rho));
     R_jit_enabled = old_enabled;
 
-    val = bcEval(code, rho, TRUE);
+    if (TYPEOF(code) == EXTERNALSXP)
+        val = externalCodeEval(code, rho);
+    else
+        val = bcEval(code, rho, TRUE);
     UNPROTECT(3);
     return val;
 }
@@ -886,7 +909,9 @@ SEXP applyClosure(SEXP call, SEXP op, SEXP arglist, SEXP rho, SEXP suppliedvars)
     body = BODY(op);
     savedrho = CLOENV(op);
 
-    if (R_jit_enabled > 0 && TYPEOF(body) != BCODESXP) {
+    if (R_jit_enabled > 0 &&
+                ((!externalCodeToExpr && TYPEOF(body) != BCODESXP) ||
+                 (externalCodeToExpr && TYPEOF(body) != EXTERNALSXP))) {
 	int old_enabled = R_jit_enabled;
 	SEXP newop;
 	R_jit_enabled = 0;
@@ -979,7 +1004,7 @@ SEXP applyClosure(SEXP call, SEXP op, SEXP arglist, SEXP rho, SEXP suppliedvars)
 	SEXP savesrcref;
 	cntxt.browserfinish = 0; /* Don't want to inherit the "f" */
 	/* switch to interpreted version when debugging compiled code */
-	if (TYPEOF(body) == BCODESXP)
+	if (TYPEOF(body) == BCODESXP || TYPEOF(body) == EXTERNALSXP)
 	    body = bytecodeExpr(body);
 	Rprintf("debugging in: ");
 	if(blines != NA_INTEGER && blines > 0)
@@ -1061,7 +1086,9 @@ static SEXP R_execClosure(SEXP call, SEXP op, SEXP arglist, SEXP rho,
 
     body = BODY(op);
 
-    if (R_jit_enabled > 0 && TYPEOF(body) != BCODESXP) {
+    if (R_jit_enabled > 0 &&
+                ((!externalCodeToExpr && TYPEOF(body) != BCODESXP) ||
+                 (externalCodeToExpr && TYPEOF(body) != EXTERNALSXP))) {
 	int old_enabled = R_jit_enabled;
 	SEXP newop;
 	R_jit_enabled = 0;
@@ -1091,7 +1118,7 @@ static SEXP R_execClosure(SEXP call, SEXP op, SEXP arglist, SEXP rho,
 	SEXP savesrcref;
 	cntxt.browserfinish = 0; /* Don't want to inherit the "f" */
 	/* switch to interpreted version when debugging compiled code */
-	if (TYPEOF(body) == BCODESXP)
+	if (TYPEOF(body) == BCODESXP || TYPEOF(body) == EXTERNALSXP)
 	    body = bytecodeExpr(body);
 	Rprintf("debugging in: ");
 	if(blines != NA_INTEGER && blines > 0)
@@ -3901,8 +3928,12 @@ static void NORET intStackOverflow()
 }
 #endif
 
+
 static SEXP bytecodeExpr(SEXP e)
 {
+    if (TYPEOF(e) == EXTERNALSXP) {
+        return externalCodeToExpr(e);
+    }
     if (isByteCode(e)) {
 	if (LENGTH(BCCONSTS(e)) > 0)
 	    return VECTOR_ELT(BCCONSTS(e), 0);
