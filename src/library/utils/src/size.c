@@ -133,6 +133,7 @@ static R_size_t objectsize(SEXP s)
 	cnt += objectsize(EXTPTR_TAG(s));
 	break;
     case RAWSXP:
+    case EXTERNALSXP:
 	vcnt = BYTE2VEC(xlength(s));
 	isVec = TRUE;
 	break;

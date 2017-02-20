@@ -209,6 +209,7 @@ const char *sexptype2char(SEXPTYPE type) {
     case VECSXP:	return "VECSXP";
     case EXPRSXP:	return "EXPRSXP";
     case BCODESXP:	return "BCODESXP";
+    case EXTERNALSXP:	return "EXTERNALSXP";
     case EXTPTRSXP:	return "EXTPTRSXP";
     case WEAKREFSXP:	return "WEAKREFSXP";
     case S4SXP:		return "S4SXP";
@@ -694,6 +695,14 @@ static R_size_t R_NodesInUse = 0;
   case RAWSXP: \
   case S4SXP: \
     break; \
+  case EXTERNALSXP: \
+    { \
+      SEXP* dc__ptrs__ = EXTERNALSXP_PTRS(__n__); \
+      uint32_t dc__i__ = EXTERNALSXP_PTRS_LENGTH(__n__); \
+      while (dc__i__--) \
+        dc__action__(*dc__ptrs__++, dc__extra__); \
+    } \
+    break; \
   case STRSXP: \
   case EXPRSXP: \
   case VECSXP: \
@@ -1042,6 +1051,7 @@ static R_INLINE R_size_t getVecSizeInVEC(SEXP s)
 	size = XLENGTH(s) + 1;
 	break;
     case RAWSXP:
+    case EXTERNALSXP:
 	size = XLENGTH(s);
 	break;
     case LGLSXP:
@@ -2623,6 +2633,7 @@ SEXP allocVector3(SEXPTYPE type, R_xlen_t length, R_allocator_t *allocator)
     switch (type) {
     case NILSXP:
 	return R_NilValue;
+    case EXTERNALSXP:
     case RAWSXP:
 	size = BYTE2VEC(length);
 #if VALGRIND_LEVEL > 0
@@ -2856,7 +2867,7 @@ SEXP allocVector3(SEXPTYPE type, R_xlen_t length, R_allocator_t *allocator)
 	VALGRIND_MAKE_MEM_UNDEFINED(LOGICAL(s), actual_size);
     else if (type == CPLXSXP)
 	VALGRIND_MAKE_MEM_UNDEFINED(COMPLEX(s), actual_size);
-    else if (type == RAWSXP)
+    else if (type == RAWSXP || type == EXTERNALSXP)
 	VALGRIND_MAKE_MEM_UNDEFINED(RAW(s), actual_size);
 #endif
     return s;
@@ -4107,6 +4118,26 @@ void (SET_FRAME)(SEXP x, SEXP v) { FIX_REFCNT(x, FRAME(x), v); CHECK_OLD_TO_NEW(
 void (SET_ENCLOS)(SEXP x, SEXP v) { FIX_REFCNT(x, ENCLOS(x), v); CHECK_OLD_TO_NEW(x, v); ENCLOS(x) = v; }
 void (SET_HASHTAB)(SEXP x, SEXP v) { FIX_REFCNT(x, HASHTAB(x), v); CHECK_OLD_TO_NEW(x, v); HASHTAB(x) = v; }
 void (SET_ENVFLAGS)(SEXP x, int v) { SET_ENVFLAGS(x, v); }
+
+/* External Accessors */
+SEXP (EXTERNALSXP_ENTRY)(SEXP x, int i) {
+    if (TYPEOF(x) != EXTERNALSXP)
+        error("%s() can only be applied to a '%s', not a '%s'",
+              "EXTERNALSXP_ENTRY", "RIR object", type2char(TYPEOF(x)));
+    return CHK(EXTERNALSXP_ENTRY(x, i));
+}
+
+SEXP (EXTERNALSXP_SET_ENTRY)(SEXP x, int i, SEXP v) {
+    if (TYPEOF(x) != EXTERNALSXP)
+        error("%s() can only be applied to a '%s', not a '%s'",
+              "EXTERNALSXP_SET_ENTRY", "RIR object", type2char(TYPEOF(x)));
+    if (i < 0 || i >= EXTERNALSXP_PTRS_LENGTH(x))
+        error(_("attempt to set index %lu/%lu in EXTERNALSXP_SET_ENTRY"),
+              i, EXTERNALSXP_PTRS_LENGTH(x));
+    FIX_REFCNT(x, EXTERNALSXP_ENTRY(x, i), v);
+    CHECK_OLD_TO_NEW(x, v);
+    return EXTERNALSXP_ENTRY(x, i) = v;
+}
 
 /* Promise Accessors */
 SEXP (PRCODE)(SEXP x) { return CHK(PRCODE(CHK(x))); }

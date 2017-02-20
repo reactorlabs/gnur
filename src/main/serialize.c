@@ -1032,6 +1032,17 @@ static void WriteItem (SEXP s, SEXP ref_table, R_outpstream_t stream)
     }
 
  tailcall:
+    if (TYPEOF(s) == EXTERNALSXP) {
+        SEXP exp = externalCodeToExpr(s);
+        PROTECT(exp);
+	int old_cmpl = R_compile_pkgs;
+	R_compile_pkgs = FALSE;
+        WriteItem(exp, ref_table, stream);
+	R_compile_pkgs = old_cmpl;
+        UNPROTECT(1);
+        return;
+    }
+
     R_CheckStack();
     if (ALTREP(s) && stream->version >= 3) {
 	SEXP info = ALTREP_SERIALIZED_CLASS(s);

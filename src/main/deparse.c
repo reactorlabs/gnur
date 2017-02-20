@@ -1466,6 +1466,10 @@ static void deparse2buff(SEXP s, LocalParseData *d)
 	d->sourceable = FALSE;
 	print2buff("<bytecode>", d);
 	break;
+    case EXTERNALSXP:
+	d->sourceable = FALSE;
+	print2buff("<external code>", d);
+	break;
     case WEAKREFSXP:
 	d->sourceable = FALSE;
 	print2buff("<weak reference>", d);

@@ -135,6 +135,8 @@ typedef unsigned int SEXPTYPE;
 #define RAWSXP      24    /* raw bytes */
 #define S4SXP       25    /* S4, non-vector */
 
+#define EXTERNALSXP 26    /* externally executed bytecode */
+
 /* used for detecting PROTECT issues in memory.c */
 #define NEWSXP      30    /* fresh node created in new page */
 #define FREESXP     31    /* node released by GC */
@@ -504,6 +506,13 @@ typedef union { VECTOR_SEXPREC s; double align; } SEXPREC_ALIGN;
 #define ENVFLAGS(x)	((x)->sxpinfo.gp)	/* for environments */
 #define SET_ENVFLAGS(x,v)	(((x)->sxpinfo.gp)=(v))
 
+/* External Access Macros */
+#define EXTERNALSXP_HEADER(x)		((uint32_t*)DATAPTR(x))
+#define EXTERNALSXP_PTRS_OFFSET(x)	(EXTERNALSXP_HEADER(x)[0])
+#define EXTERNALSXP_PTRS_LENGTH(x)	(EXTERNALSXP_HEADER(x)[1])
+#define EXTERNALSXP_PTRS(x)		((SEXP*)(((char*)EXTERNALSXP_HEADER(x)) + EXTERNALSXP_PTRS_OFFSET(x)))
+#define EXTERNALSXP_ENTRY(x,i)		((EXTERNALSXP_PTRS(x))[i])
+
 #else /* not USE_RINTERNALS */
 // ======================= not USE_RINTERNALS section
 
@@ -817,6 +826,10 @@ void SET_FRAME(SEXP x, SEXP v);
 void SET_ENCLOS(SEXP x, SEXP v);
 void SET_HASHTAB(SEXP x, SEXP v);
 
+/* External Access Macros */
+SEXP (EXTERNALSXP_ENTRY)(SEXP x, int i);
+SEXP (EXTERNALSXP_SET_ENTRY)(SEXP x, int i, SEXP v);
+
 /* Promise Access Functions */
 /* First five have macro versions in Defn.h */
 SEXP (PRCODE)(SEXP x);
@@ -846,7 +859,7 @@ void (SET_HASHVALUE)(SEXP x, int v);
 #define BCODE_CODE(x)	CAR(x)
 #define BCODE_CONSTS(x) CDR(x)
 #define BCODE_EXPR(x)	TAG(x)
-#define isByteCode(x)	(TYPEOF(x)==BCODESXP)
+#define isByteCode(x)	(TYPEOF(x)==BCODESXP || TYPEOF(x)==EXTERNALSXP)
 
 /* Pointer Protection and Unprotection */
 #define PROTECT(s)	Rf_protect(s)
