@@ -63,3 +63,10 @@ local({
     tests_startup <- Sys.getenv("R_TESTS")
     if(nzchar(tests_startup)) source(tests_startup)
 })
+
+if (Sys.getenv("EXTRA_LOAD_SO") != "") {
+    dyn.load(Sys.getenv("EXTRA_LOAD_SO"));
+}
+if (Sys.getenv("EXTRA_LOAD_R") != "") {
+    sys.source(Sys.getenv("EXTRA_LOAD_R"))
+}
