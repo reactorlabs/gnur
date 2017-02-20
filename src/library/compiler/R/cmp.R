@@ -2878,8 +2878,10 @@ disassemble <- function(code) {
     }
     if (typeof(code)=="closure") {
         code <- .Internal(bodyCode(code))
-        if (typeof(code) != "bytecode")
-            stop("function is not compiled")
+        if (typeof(code) != "bytecode") {
+            warning("function is not compiled")
+            return()
+        }
     }
     dput(disasm(.Internal(disassemble(code))))
 }
