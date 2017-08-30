@@ -646,7 +646,15 @@ static R_size_t R_NodesInUse = 0;
   case WEAKREFSXP: \
   case RAWSXP: \
   case S4SXP: \
+    break; \
   case EXTERNALSXP: \
+    { \
+      int i; \
+      SEXP* __end__ = (SEXP*)((uintptr_t)INTEGER(__n__) + LENGTH(__n__)); \
+      SEXP* __ptrs__ = __end__ - TRUELENGTH(__n__); \
+      while (__ptrs__ != __end__) \
+        dc__action__(*__ptrs__++, dc__extra__); \
+    } \
     break; \
   case STRSXP: \
   case EXPRSXP: \
