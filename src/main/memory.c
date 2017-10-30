@@ -649,10 +649,10 @@ static R_size_t R_NodesInUse = 0;
     break; \
   case EXTERNALSXP: \
     { \
-      void* o = (void*)INTEGER(__n__); \
-      SEXP* __ptrs__ = (SEXP*)(((char*)o) + ((uint32_t*)o)[0]); \
-      uint32_t i = ((uint32_t*)o)[1]; \
-      while (i--) \
+      void* __o__ = (void*)INTEGER(__n__); \
+      SEXP* __ptrs__ = (SEXP*)(((char*)__o__) + ((uint32_t*)__o__)[0]); \
+      uint32_t __i__ = ((uint32_t*)__o__)[1]; \
+      while (__i__--) \
         dc__action__(*__ptrs__++, dc__extra__); \
     } \
     break; \
