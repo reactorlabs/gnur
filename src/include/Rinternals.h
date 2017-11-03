@@ -457,6 +457,12 @@ typedef union { VECTOR_SEXPREC s; double align; } SEXPREC_ALIGN;
 #define CLEAR_FRAME_CHANGED(x) SET_ENVFLAGS(x, ENVFLAGS(x) & ~FRAME_CHANGED_MASK)
 #define CLEAR_FRAME_LEAKED(x) SET_ENVFLAGS(x, ENVFLAGS(x) & ~FRAME_LEAKED_MASK)
 
+/* External Access Macros */
+#define EXTERNALSXP_HEADER(x)		((uint32_t*)DATAPTR(x))
+#define EXTERNALSXP_PTRS_OFFSET(x)	(EXTERNALSXP_HEADER(x)[0])
+#define EXTERNALSXP_PTRS_LENGTH(x)	(EXTERNALSXP_HEADER(x)[1])
+#define EXTERNALSXP_PTRS(x)		((SEXP*)(((char*)EXTERNALSXP_HEADER(x)) + EXTERNALSXP_PTRS_OFFSET(x)))
+#define EXTERNALSXP_ENTRY(x,i)		((EXTERNALSXP_PTRS(x))[i])
 
 #else /* not USE_RINTERNALS */
 // ======================= not USE_RINTERNALS section
@@ -643,6 +649,10 @@ void (SET_ENVFLAGS)(SEXP x, int v);
 void SET_FRAME(SEXP x, SEXP v);
 void SET_ENCLOS(SEXP x, SEXP v);
 void SET_HASHTAB(SEXP x, SEXP v);
+
+/* External Access Macros */
+SEXP (EXTERNALSXP_ENTRY)(SEXP x, int i);
+SEXP (EXTERNALSXP_SET_ENTRY)(SEXP x, int i, SEXP v);
 
 /* Promise Access Functions */
 /* First five have macro versions in Defn.h */
