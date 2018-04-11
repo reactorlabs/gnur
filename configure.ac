@@ -2026,7 +2026,7 @@ R_FUNC_SIGACTION
 if test x${use_internal_tzcode} = xdefault; then
 case "${host_os}" in
    darwin*)
-     use_internal_tzcode=no;
+     use_internal_tzcode=yes;
      ;; 
 esac
 fi
