@@ -1878,12 +1878,15 @@ R_varloc_t R_findVarLocInFrame(SEXP, SEXP);
 
 
 typedef SEXP (*external_code_eval)(SEXP, SEXP);
+typedef SEXP (*external_closure_call)(SEXP, SEXP, SEXP, SEXP);
 typedef SEXP (*external_code_compile)(SEXP, SEXP);
 typedef SEXP (*external_code_to_expr)(SEXP);
 typedef SEXP (*external_code_args_lazy)(void*);
 extern external_code_to_expr externalCodeToExpr;
 extern external_code_args_lazy externalArgsLazyCreation;
-extern void registerExternalCode(external_code_eval, external_code_compile,
+extern void registerExternalCode(external_code_eval,
+                                 external_closure_call,
+                                 external_code_compile,
                                  external_code_to_expr,
                                  external_code_args_lazy);
 

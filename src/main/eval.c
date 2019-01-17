@@ -637,20 +637,22 @@ void attribute_hidden R_BCProtReset(R_bcstack_t *ptop)
     } while (0)
 
 static external_code_eval externalCodeEval = NULL;
+static external_closure_call externalClosureCall = NULL;
 static external_code_compile externalCodeCompile = NULL;
 external_code_to_expr externalCodeToExpr = NULL;
 external_code_args_lazy externalArgsLazyCreation = NULL;
 
 void registerExternalCode(external_code_eval eval,
+                          external_closure_call call,
                           external_code_compile compiler,
-                          external_code_to_expr toExpr, 
+                          external_code_to_expr toExpr,
                           external_code_args_lazy argsLazyCreation) {
     externalCodeEval = eval;
+    externalClosureCall = call;
     externalCodeCompile = compiler;
     externalCodeToExpr = toExpr;
     externalArgsLazyCreation = argsLazyCreation;
 }
-
 
 /* Return value of "e" evaluated in "rho". */
 
@@ -1802,6 +1804,14 @@ SEXP applyClosure(SEXP call, SEXP op, SEXP arglist, SEXP rho, SEXP suppliedvars)
     if (!isEnvironment(rho))
 	errorcall(call, "'rho' must be an environment not %s: detected in C-level applyClosure",
 		  type2char(TYPEOF(rho)));
+
+    if (suppliedvars == R_NilValue && TYPEOF(BODY(op)) == EXTERNALSXP) {
+        int bcintactivesave = R_BCIntActive;
+        R_BCIntActive = 0;
+        SEXP res = externalClosureCall(call, op, arglist, rho);
+        R_BCIntActive = bcintactivesave;
+        return res;
+    }
 
     formals = FORMALS(op);
     savedrho = CLOENV(op);
