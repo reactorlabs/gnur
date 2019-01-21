@@ -654,6 +654,7 @@ void registerExternalCode(external_code_eval eval,
     externalArgsLazyCreation = argsLazyCreation;
 }
 
+
 /* Return value of "e" evaluated in "rho". */
 
 /* some places, e.g. deparse2buff, call this with a promise and rho = NULL */
