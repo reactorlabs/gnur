@@ -1314,6 +1314,10 @@ extern const char *locale2charset(const char *);
         onintr(); \
 } while(0)
 
+// Helpers needed to interact with RIR
+#define LAZY_ARGS_MAGIC_RIR 0x1a27a000
+void lazyCreatePromArgs(RCNTXT* ctx);
+int isRirDataWrapper(SEXP ctx);
 
 /*
    alloca is neither C99 nor POSIX.
