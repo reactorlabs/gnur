@@ -111,6 +111,16 @@
 #include <Defn.h>
 #include <Internal.h>
 
+// create arglist lazily if coming from rir and rir did not do it
+void lazyCreatePromArgs(RCNTXT* ctx) {
+    if (isRirDataWrapper(ctx->promargs))
+        ctx->promargs = externalArgsLazyCreation((void*)ctx->promargs);
+}
+
+ int isRirDataWrapper(SEXP promargs) {
+    return *((uint32_t*)(promargs)) == LAZY_ARGS_MAGIC_RIR;
+}
+
 /* R_run_onexits - runs the conexit/cend code for all contexts from
    R_GlobalContext down to but not including the argument context.
    This routine does not stop at a CTXT_TOPLEVEL--the code that
@@ -585,6 +595,8 @@ SEXP attribute_hidden do_sysbrowser(SEXP call, SEXP op, SEXP args, SEXP rho)
 	}
 	if( !(cptr->callflag == CTXT_BROWSER) )
 	   error(_("not that many calls to browser are active"));
+
+	lazyCreatePromArgs(cptr);
 
 	if( PRIMVAL(op) == 1 )
 	    rval = CAR(cptr->promargs);

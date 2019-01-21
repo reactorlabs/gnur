@@ -1880,8 +1880,12 @@ R_varloc_t R_findVarLocInFrame(SEXP, SEXP);
 typedef SEXP (*external_code_eval)(SEXP, SEXP);
 typedef SEXP (*external_code_compile)(SEXP, SEXP);
 typedef SEXP (*external_code_to_expr)(SEXP);
+typedef SEXP (*external_code_args_lazy)(void*);
 extern external_code_to_expr externalCodeToExpr;
-extern void registerExternalCode(external_code_eval, external_code_compile, external_code_to_expr);
+extern external_code_args_lazy externalArgsLazyCreation;
+extern void registerExternalCode(external_code_eval, external_code_compile,
+                                 external_code_to_expr,
+                                 external_code_args_lazy);
 
 
 /* Defining NO_RINLINEDFUNS disables use to simulate platforms where

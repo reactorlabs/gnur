@@ -1767,7 +1767,8 @@ static int RunGenCollect(R_size_t size_needed)
 
     for (ctxt = R_GlobalContext ; ctxt != NULL ; ctxt = ctxt->nextcontext) {
 	FORWARD_NODE(ctxt->conexit);       /* on.exit expressions */
-	FORWARD_NODE(ctxt->promargs);	   /* promises supplied to closure */
+	if (!isRirDataWrapper(ctxt->promargs))
+        FORWARD_NODE(ctxt->promargs);  /* promises supplied to closure */
 	FORWARD_NODE(ctxt->callfun);       /* the closure called */
 	FORWARD_NODE(ctxt->sysparent);     /* calling environment */
 	FORWARD_NODE(ctxt->call);          /* the call */

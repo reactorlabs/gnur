@@ -639,13 +639,18 @@ void attribute_hidden R_BCProtReset(R_bcstack_t *ptop)
 static external_code_eval externalCodeEval = NULL;
 static external_code_compile externalCodeCompile = NULL;
 external_code_to_expr externalCodeToExpr = NULL;
+external_code_args_lazy externalArgsLazyCreation = NULL;
+
 void registerExternalCode(external_code_eval eval,
                           external_code_compile compiler,
-                          external_code_to_expr toExpr) {
+                          external_code_to_expr toExpr, 
+                          external_code_args_lazy argsLazyCreation) {
     externalCodeEval = eval;
     externalCodeCompile = compiler;
     externalCodeToExpr = toExpr;
+    externalArgsLazyCreation = argsLazyCreation;
 }
+
 
 /* Return value of "e" evaluated in "rho". */
 
@@ -2099,6 +2104,9 @@ SEXP R_execMethod(SEXP op, SEXP rho)
     /* get the rest of the stuff we need from the current context,
        execute the method, and return the result */
     call = cptr->call;
+
+    lazyCreatePromArgs(cptr);
+
     arglist = cptr->promargs;
     val = R_execClosure(call, newrho, callerenv, callerenv, arglist, op);
 #ifdef ADJUST_ENVIR_REFCNTS
@@ -3449,6 +3457,7 @@ SEXP attribute_hidden do_recall(SEXP call, SEXP op, SEXP args, SEXP rho)
 	cptr = cptr->nextcontext;
     }
     if (cptr != NULL) {
+	lazyCreatePromArgs(cptr);
 	args = cptr->promargs;
     }
     /* get the env recall was called from */
