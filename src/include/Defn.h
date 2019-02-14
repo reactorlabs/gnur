@@ -1281,8 +1281,11 @@ extern const char *locale2charset(const char *);
 
 // Helpers needed to interact with RIR
 #define LAZY_ARGS_MAGIC_RIR 0x1a27a000
+#define LAZY_ENVIRONMENT_MAGIC 0xe4210e47
 void lazyCreatePromArgs(RCNTXT* ctx);
-int isRirDataWrapper(SEXP ctx);
+void lazyCreateEnvironment(RCNTXT* ctx);
+int isLazyPromiseArgs(SEXP ctx);
+int isLazyEnvironment(SEXP ctx);
 
 /*
    alloca is neither C99 nor POSIX.

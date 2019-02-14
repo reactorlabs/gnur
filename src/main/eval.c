@@ -537,17 +537,19 @@ static external_closure_call externalClosureCall = NULL;
 static external_code_compile externalCodeCompile = NULL;
 external_code_to_expr externalCodeToExpr = NULL;
 external_code_args_lazy externalArgsLazyCreation = NULL;
+external_code_lazy_env externalLazyEnvCreation = NULL;
 
-void registerExternalCode(external_code_eval eval,
-                          external_closure_call call,
+void registerExternalCode(external_code_eval eval, external_closure_call call,
                           external_code_compile compiler,
                           external_code_to_expr toExpr,
-                          external_code_args_lazy argsLazyCreation) {
+                          external_code_args_lazy argsLazyCreation,
+                          external_code_lazy_env lazyEnvCreation) {
     externalCodeEval = eval;
     externalClosureCall = call;
     externalCodeCompile = compiler;
     externalCodeToExpr = toExpr;
     externalArgsLazyCreation = argsLazyCreation;
+    externalLazyEnvCreation = lazyEnvCreation;
 }
 
 /* Return value of "e" evaluated in "rho". */
@@ -3306,6 +3308,7 @@ SEXP attribute_hidden do_recall(SEXP call, SEXP op, SEXP args, SEXP rho)
        otherwise search for it by name or evaluate the expression
        originally used to get it.
     */
+    lazyCreateEnvironment(cptr);
     if (cptr->callfun != R_NilValue)
 	PROTECT(s = cptr->callfun);
     else if( TYPEOF(CAR(cptr->call)) == SYMSXP)

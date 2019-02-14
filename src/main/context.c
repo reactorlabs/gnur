@@ -113,12 +113,22 @@
 
 // create arglist lazily if coming from rir and rir did not do it
 void lazyCreatePromArgs(RCNTXT* ctx) {
-    if (isRirDataWrapper(ctx->promargs))
+    if (isLazyPromiseArgs(ctx->promargs))
         ctx->promargs = externalArgsLazyCreation((void*)ctx->promargs);
 }
 
- int isRirDataWrapper(SEXP promargs) {
+// create parent environment lazily if coming from rir and rir did not do it
+void lazyCreateEnvironment(RCNTXT* ctx) {
+    if (isLazyEnvironment(ctx->sysparent)) {
+        ctx->sysparent = externalLazyEnvCreation((void*)ctx->sysparent);
+    }
+}
+int isLazyPromiseArgs(SEXP promargs) {
     return *((uint32_t*)(promargs)) == LAZY_ARGS_MAGIC_RIR;
+}
+
+int isLazyEnvironment(SEXP promargs) {
+    return *((uint32_t*)(promargs)) == LAZY_ENVIRONMENT_MAGIC;
 }
 
 /* R_run_onexits - runs the conexit/cend code for all contexts from
@@ -432,6 +442,7 @@ int attribute_hidden R_sysparent(int n, RCNTXT *cptr)
     /* make sure we're looking at a return context */
     while (cptr->nextcontext != NULL && !(cptr->callflag & CTXT_FUNCTION) )
 	cptr = cptr->nextcontext;
+    lazyCreateEnvironment(cptr);
     s = cptr->sysparent;
     if(s == R_GlobalEnv)
 	return 0;
