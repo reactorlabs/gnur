@@ -1693,9 +1693,11 @@ static void RunGenCollect(R_size_t size_needed)
 	if (!isLazyPromiseArgs(ctxt->promargs))
         FORWARD_NODE(ctxt->promargs);  /* promises supplied to closure */
 	FORWARD_NODE(ctxt->callfun);       /* the closure called */
-	FORWARD_NODE(ctxt->sysparent);     /* calling environment */
+	if (!isLazyPromiseArgs(ctxt->sysparent))
+        FORWARD_NODE(ctxt->sysparent);     /* calling environment */
 	FORWARD_NODE(ctxt->call);          /* the call */
-	FORWARD_NODE(ctxt->cloenv);        /* the closure environment */
+	if (!isLazyPromiseArgs(ctxt->cloenv))
+        FORWARD_NODE(ctxt->cloenv);        /* the closure environment */
 	FORWARD_NODE(ctxt->bcbody);        /* the current byte code object */
 	FORWARD_NODE(ctxt->handlerstack);  /* the condition handler stack */
 	FORWARD_NODE(ctxt->restartstack);  /* the available restarts stack */
