@@ -123,6 +123,15 @@ void lazyCreateEnvironment(RCNTXT* ctx) {
         ctx->sysparent = externalLazyEnvCreation((void*)ctx->sysparent);
     }
 }
+
+void lazyCreateClosureEnv(RCNTXT* ctx) {
+    if (isLazyEnvironment(ctx->cloenv)) {
+        ctx->cloenv = externalLazyEnvCreation((void*)ctx->cloenv);
+        // Here, we may also need to walk through some subsequent RCNTXTs
+        // and change the envstub for the new environment 
+    }
+}
+
 int isLazyPromiseArgs(SEXP promargs) {
     return *((uint32_t*)(promargs)) == LAZY_ARGS_MAGIC_RIR;
 }
@@ -406,7 +415,8 @@ SEXP attribute_hidden R_sysframe(int n, RCNTXT *cptr)
     while (cptr->nextcontext != NULL) {
 	if (cptr->callflag & CTXT_FUNCTION ) {
 	    if (n == 0) {  /* we need to detach the enclosing env */
-		return cptr->cloenv;
+		    lazyCreateClosureEnv(cptr);
+            return cptr->cloenv;
 	    }
 	    else
 		n--;
