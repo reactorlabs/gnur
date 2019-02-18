@@ -1696,7 +1696,7 @@ static void RunGenCollect(R_size_t size_needed)
 	if (!isLazyEnvironment(ctxt->sysparent))
         FORWARD_NODE(ctxt->sysparent);     /* calling environment */
 	FORWARD_NODE(ctxt->call);          /* the call */
-	if (!isLazyEnvironment(ctxt->sysparent))
+	if (!isLazyEnvironment(ctxt->cloenv))
         FORWARD_NODE(ctxt->cloenv);        /* the closure environment */
 	FORWARD_NODE(ctxt->bcbody);        /* the current byte code object */
 	FORWARD_NODE(ctxt->handlerstack);  /* the condition handler stack */
