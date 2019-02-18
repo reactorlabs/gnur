@@ -1693,10 +1693,10 @@ static void RunGenCollect(R_size_t size_needed)
 	if (!isLazyPromiseArgs(ctxt->promargs))
         FORWARD_NODE(ctxt->promargs);  /* promises supplied to closure */
 	FORWARD_NODE(ctxt->callfun);       /* the closure called */
-	if (!isLazyPromiseArgs(ctxt->sysparent))
+	if (!isLazyEnvironment(ctxt->sysparent))
         FORWARD_NODE(ctxt->sysparent);     /* calling environment */
 	FORWARD_NODE(ctxt->call);          /* the call */
-	if (!isLazyPromiseArgs(ctxt->cloenv))
+	if (!isLazyEnvironment(ctxt->sysparent))
         FORWARD_NODE(ctxt->cloenv);        /* the closure environment */
 	FORWARD_NODE(ctxt->bcbody);        /* the current byte code object */
 	FORWARD_NODE(ctxt->handlerstack);  /* the condition handler stack */
@@ -1717,9 +1717,11 @@ static void RunGenCollect(R_size_t size_needed)
 	if (sp->tag == RAWMEM_TAG)
 	    sp += sp->u.ival;
 	else if (sp->tag == 0 || IS_PARTIAL_SXP_TAG(sp->tag))
-	    FORWARD_NODE(sp->u.sxpval);
+	    if (sp->u.sxpval && !isLazyEnvironment(sp->u.sxpval))
+            FORWARD_NODE(sp->u.sxpval);
 #else
-	FORWARD_NODE(*sp);
+	if (*sp && !isLazyEnvironment(*sp))
+	    FORWARD_NODE(*sp);
 #endif
     }
     FORWARD_NODE(R_CachedScalarReal);

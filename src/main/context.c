@@ -136,8 +136,8 @@ int isLazyPromiseArgs(SEXP promargs) {
     return *((uint32_t*)(promargs)) == LAZY_ARGS_MAGIC_RIR;
 }
 
-int isLazyEnvironment(SEXP promargs) {
-    return *((uint32_t*)(promargs)) == LAZY_ENVIRONMENT_MAGIC;
+int isLazyEnvironment(SEXP environment) {
+    return *((uint32_t*)(environment)) == LAZY_ENVIRONMENT_MAGIC;
 }
 
 /* R_run_onexits - runs the conexit/cend code for all contexts from
