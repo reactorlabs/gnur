@@ -536,20 +536,17 @@ static external_code_eval externalCodeEval = NULL;
 static external_closure_call externalClosureCall = NULL;
 static external_code_compile externalCodeCompile = NULL;
 external_code_to_expr externalCodeToExpr = NULL;
-external_code_args_lazy externalArgsLazyCreation = NULL;
-external_code_lazy_env externalLazyEnvCreation = NULL;
+external_code_materialize externalMaterialize = NULL;
 
 void registerExternalCode(external_code_eval eval, external_closure_call call,
                           external_code_compile compiler,
                           external_code_to_expr toExpr,
-                          external_code_args_lazy argsLazyCreation,
-                          external_code_lazy_env lazyEnvCreation) {
+                          external_code_materialize materialize) {
     externalCodeEval = eval;
     externalClosureCall = call;
     externalCodeCompile = compiler;
     externalCodeToExpr = toExpr;
-    externalArgsLazyCreation = argsLazyCreation;
-    externalLazyEnvCreation = lazyEnvCreation;
+    externalMaterialize = materialize;
 }
 
 /* Return value of "e" evaluated in "rho". */
@@ -1986,7 +1983,7 @@ SEXP R_execMethod(SEXP op, SEXP rho)
        execute the method, and return the result */
     call = cptr->call;
 
-    lazyCreatePromArgs(cptr);
+    materializeIfLazy(&(cptr->promargs));
 
     arglist = cptr->promargs;
     val = R_execClosure(call, newrho, callerenv, callerenv, arglist, op);
@@ -3291,7 +3288,7 @@ SEXP attribute_hidden do_recall(SEXP call, SEXP op, SEXP args, SEXP rho)
 	cptr = cptr->nextcontext;
     }
     if (cptr != NULL) {
-	lazyCreatePromArgs(cptr);
+	materializeIfLazy(&(cptr->promargs));
 	args = cptr->promargs;
     }
     /* get the env recall was called from */
@@ -3308,7 +3305,7 @@ SEXP attribute_hidden do_recall(SEXP call, SEXP op, SEXP args, SEXP rho)
        otherwise search for it by name or evaluate the expression
        originally used to get it.
     */
-    lazyCreateEnvironment(cptr);
+    materializeIfLazy(&(cptr->sysparent));
     if (cptr->callfun != R_NilValue)
 	PROTECT(s = cptr->callfun);
     else if( TYPEOF(CAR(cptr->call)) == SYMSXP)

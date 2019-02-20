@@ -1690,13 +1690,13 @@ static void RunGenCollect(R_size_t size_needed)
 
     for (ctxt = R_GlobalContext ; ctxt != NULL ; ctxt = ctxt->nextcontext) {
 	FORWARD_NODE(ctxt->conexit);       /* on.exit expressions */
-	if (!isLazyPromiseArgs(ctxt->promargs))
+	if (!isRirDataWrapper(ctxt->promargs))
         FORWARD_NODE(ctxt->promargs);  /* promises supplied to closure */
 	FORWARD_NODE(ctxt->callfun);       /* the closure called */
-	if (!isLazyEnvironment(ctxt->sysparent))
+	if (!isRirDataWrapper(ctxt->sysparent))
         FORWARD_NODE(ctxt->sysparent);     /* calling environment */
 	FORWARD_NODE(ctxt->call);          /* the call */
-	if (!isLazyEnvironment(ctxt->cloenv))
+	if (!isRirDataWrapper(ctxt->cloenv))
         FORWARD_NODE(ctxt->cloenv);        /* the closure environment */
 	FORWARD_NODE(ctxt->bcbody);        /* the current byte code object */
 	FORWARD_NODE(ctxt->handlerstack);  /* the condition handler stack */
@@ -1717,10 +1717,10 @@ static void RunGenCollect(R_size_t size_needed)
 	if (sp->tag == RAWMEM_TAG)
 	    sp += sp->u.ival;
 	else if (sp->tag == 0 || IS_PARTIAL_SXP_TAG(sp->tag))
-	    if (sp->u.sxpval && !isLazyEnvironment(sp->u.sxpval))
+	    if (sp->u.sxpval && !isRirDataWrapper(sp->u.sxpval))
             FORWARD_NODE(sp->u.sxpval);
 #else
-	if (*sp && !isLazyEnvironment(*sp))
+	if (*sp && !isRirDataWrapper(*sp))
 	    FORWARD_NODE(*sp);
 #endif
     }
