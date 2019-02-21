@@ -1283,6 +1283,7 @@ extern const char *locale2charset(const char *);
 #define RIR_DATA_WRAPPER_MAGIC 0xda7a0403
 void materializeIfLazy(SEXP* ctx);
 int isRirDataWrapper(SEXP s);
+uint32_t traceableSEXPs(SEXP s);
 
 /*
    alloca is neither C99 nor POSIX.
