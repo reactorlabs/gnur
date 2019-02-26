@@ -43,7 +43,7 @@ static SEXP GetObject(RCNTXT *cptr)
     if (tag != R_NilValue && tag != R_DotsSymbol) {
 	s = NULL;
 	/** exact matches **/
-	lazyCreatePromArgs(cptr);
+	materializeIfLazy(&(cptr->promargs));
 	for (b = cptr->promargs ; b != R_NilValue ; b = CDR(b))
 	    if (TAG(b) != R_NilValue && pmatch(tag, TAG(b), 1)) {
 		if (s != NULL)
@@ -729,7 +729,7 @@ SEXP attribute_hidden do_nextmethod(SEXP call, SEXP op, SEXP args, SEXP env)
        the actuals, expanding any ... that occurs */
     formals = FORMALS(s);
 
-    lazyCreatePromArgs(cptr);
+    materializeIfLazy(&(cptr->promargs));
 
     PROTECT(matchedarg = patchArgsByActuals(formals, cptr->promargs, cptr->cloenv));
 

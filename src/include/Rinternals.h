@@ -1730,14 +1730,14 @@ typedef SEXP (*external_code_eval)(SEXP, SEXP);
 typedef SEXP (*external_closure_call)(SEXP, SEXP, SEXP, SEXP);
 typedef SEXP (*external_code_compile)(SEXP, SEXP);
 typedef SEXP (*external_code_to_expr)(SEXP);
-typedef SEXP (*external_code_args_lazy)(void*);
+typedef SEXP (*external_code_materialize)(void*);
+typedef SEXP* (*external_code_keepAlive)(void*);
 extern external_code_to_expr externalCodeToExpr;
-extern external_code_args_lazy externalArgsLazyCreation;
-extern void registerExternalCode(external_code_eval,
-                                 external_closure_call,
-                                 external_code_compile,
-                                 external_code_to_expr,
-                                 external_code_args_lazy);
+extern external_code_materialize externalMaterialize;
+extern external_code_keepAlive externalKeepAlive;
+extern void registerExternalCode(external_code_eval, external_closure_call,
+                                 external_code_compile, external_code_to_expr,
+                                 external_code_materialize, external_code_keepAlive);
 
 
 /* Defining NO_RINLINEDFUNS disables use to simulate platforms where
