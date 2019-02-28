@@ -166,7 +166,7 @@ R-valgrind = $(R) --debugger="valgrind --tool=memcheck"
 
 ## The definitions for Internet are in Makefile.{in,win}.
 ## (That's historical: they are currently the same.)
-all-basic-tests = Examples Specific Reg Internet
+all-basic-tests = Examples Specific Reg
 test-all-basics:
 	@for name in $(all-basic-tests); do \
 	  $(MK) test-$${name} || exit 1; \
@@ -175,7 +175,7 @@ test-all-basics:
 ## if you change this, also edit Makefile.install
 ## The definitions for Standalone are in Makefile.{in,win}.
 all-devel-tests = DateTime Docs IsAs Random Demo Primitive Regexp \
-    Internet2 CRANtools Segfault Standalone Packages
+    Segfault Standalone Packages
 test-all-devel:
 	@for name in $(all-devel-tests); do \
 	  $(MK) test-$${name} || exit 1; \
