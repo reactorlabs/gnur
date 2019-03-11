@@ -1375,7 +1375,7 @@ static SEXP new_compact_realseq(R_xlen_t n, double n1, double inc)
  ** Compact Integer/Real Sequences
  **/
 
-SEXP attribute_hidden R_compact_intrange(R_xlen_t n1, R_xlen_t n2)
+SEXP R_compact_intrange(R_xlen_t n1, R_xlen_t n2)
 {
     R_xlen_t n = n1 <= n2 ? n2 - n1 + 1 : n1 - n2 + 1;
 
