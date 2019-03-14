@@ -118,12 +118,21 @@ for (pkg in core.pkgs) {
 	      "df0 <- as.data.frame(c0)\n", sep="")
 
 	  cat("f <- get(\"",nm,"\", pos = '", pkgname, "')\n", sep="")
-	  cat("f()\nf(NULL)\nf(,NULL)\nf(NULL,NULL)\n",
+	  
+      if (nm == "rcond"){
+          cat("f()\nf(NULL)\nf(,NULL)\nf(NULL,NULL)\n",
+	      "f(list())\nf(l0)\nf(c0)\nf(df0)\nf(FALSE)\n",
+	      "f(list(),list())\nf(l0,l0)\nf(c0,c0)\n",
+              "f(df0,df0)\nf(FALSE,FALSE)\n",
+	      sep="")
+      } else {
+          cat("f()\nf(NULL)\nf(,NULL)\nf(NULL,NULL)\n",
 	      "f(list())\nf(l0)\nf(c0)\nf(m0)\nf(df0)\nf(FALSE)\n",
 	      "f(list(),list())\nf(l0,l0)\nf(c0,c0)\n",
               "f(df0,df0)\nf(FALSE,FALSE)\n",
 	      sep="")
       }
+    }
   }
   if(lib.not.loaded) {
       detach(pos=this.pos)
