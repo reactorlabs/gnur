@@ -617,7 +617,7 @@ static struct {
     PAGE_HEADER *pages;
 } R_GenHeap[NUM_NODE_CLASSES];
 
-static R_size_t R_NodesInUse = 0;
+R_size_t R_NodesInUse = 0;
 
 #define NEXT_NODE(s) (s)->gengc_next_node
 #define PREV_NODE(s) (s)->gengc_prev_node
