@@ -1688,10 +1688,10 @@ SEXP applyClosure(SEXP call, SEXP op, SEXP arglist, SEXP rho, SEXP suppliedvars)
 	errorcall(call, "'rho' must be an environment not %s: detected in C-level applyClosure",
 		  type2char(TYPEOF(rho)));
 
-    if (suppliedvars == R_NilValue && TYPEOF(BODY(op)) == EXTERNALSXP) {
+    if (TYPEOF(BODY(op)) == EXTERNALSXP) {
         int bcintactivesave = R_BCIntActive;
         R_BCIntActive = 0;
-        SEXP res = externalClosureCall(call, op, arglist, rho);
+        SEXP res = externalClosureCall(call, op, arglist, rho, suppliedvars);
         R_BCIntActive = bcintactivesave;
         return res;
     }
