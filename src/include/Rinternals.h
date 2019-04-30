@@ -1688,12 +1688,16 @@ typedef SEXP (*external_code_compile)(SEXP, SEXP);
 typedef SEXP (*external_code_to_expr)(SEXP);
 typedef SEXP (*external_code_materialize)(void*);
 typedef SEXP* (*external_code_keepAlive)(void*);
+typedef void (*external_code_cleanup)(void);
 extern external_code_to_expr externalCodeToExpr;
 extern external_code_materialize externalMaterialize;
 extern external_code_keepAlive externalKeepAlive;
+extern external_code_cleanup externalCleanup;
 extern void registerExternalCode(external_code_eval, external_closure_call,
                                  external_code_compile, external_code_to_expr,
-                                 external_code_materialize, external_code_keepAlive);
+                                 external_code_materialize, 
+                                 external_code_keepAlive,
+                                 external_code_cleanup);
 
 
 /* Defining NO_RINLINEDFUNS disables use to simulate platforms where

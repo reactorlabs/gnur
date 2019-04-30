@@ -538,17 +538,21 @@ static external_code_compile externalCodeCompile = NULL;
 external_code_to_expr externalCodeToExpr = NULL;
 external_code_materialize externalMaterialize = NULL;
 external_code_keepAlive externalKeepAlive = NULL;
+external_code_cleanup externalCleanup = NULL;
 
 void registerExternalCode(external_code_eval eval, external_closure_call call,
                           external_code_compile compiler,
                           external_code_to_expr toExpr,
-                          external_code_materialize materialize, external_code_keepAlive keepAlive) {
+                          external_code_materialize materialize,
+                          external_code_keepAlive keepAlive,
+                          external_code_cleanup cleanup) {
     externalCodeEval = eval;
     externalClosureCall = call;
     externalCodeCompile = compiler;
     externalCodeToExpr = toExpr;
     externalMaterialize = materialize;
 	externalKeepAlive = keepAlive;
+    externalCleanup = cleanup;
 }
 
 /* Return value of "e" evaluated in "rho". */
