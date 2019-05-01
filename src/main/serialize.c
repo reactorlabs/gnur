@@ -179,14 +179,26 @@
    version 2 ALTREP objects are serialied like non-ALTREP ones. */
 
 /*
- * Forward Declarations
+ * Forward Declarations (RIR: made not static and added more)
  */
-
-static void OutStringVec(R_outpstream_t stream, SEXP s, SEXP ref_table);
-static void WriteItem (SEXP s, SEXP ref_table, R_outpstream_t stream);
-static SEXP ReadItem(SEXP ref_table, R_inpstream_t stream);
-static void WriteBC(SEXP s, SEXP ref_table, R_outpstream_t stream);
-static SEXP ReadBC(SEXP ref_table, R_inpstream_t stream);
+void WriteItem(SEXP s, SEXP ref_table, R_outpstream_t stream);
+SEXP ReadItem(SEXP ref_table, R_inpstream_t stream);
+void OutStringVec(R_outpstream_t stream, SEXP s, SEXP ref_table);
+void WriteBC(SEXP s, SEXP ref_table, R_outpstream_t stream);
+SEXP ReadBC(SEXP ref_table, R_inpstream_t stream);
+void OutInteger(R_outpstream_t stream, int i);
+void OutReal(R_outpstream_t stream, double d);
+void OutComplex(R_outpstream_t stream, Rcomplex c);
+void OutByte(R_outpstream_t stream, Rbyte i);
+void OutString(R_outpstream_t stream, const char *s, int length);
+void InWord(R_inpstream_t stream, char * buf, int size);
+int InInteger(R_inpstream_t stream);
+double InReal(R_inpstream_t stream);
+Rcomplex InComplex(R_inpstream_t stream);
+void InString(R_inpstream_t stream, char *buf, int length);
+void OutRefIndex(R_outpstream_t stream, int i);
+int InRefIndex(R_inpstream_t stream, int flags);
+void OutStringVec(R_outpstream_t stream, SEXP s, SEXP ref_table);
 
 /*
  * Constants
@@ -244,7 +256,7 @@ static int Rsnprintf(char *buf, int size, const char *format, ...)
  * Basic Output Routines
  */
 
-static void OutInteger(R_outpstream_t stream, int i)
+void OutInteger(R_outpstream_t stream, int i)
 {
     char buf[128];
     switch (stream->type) {
@@ -268,7 +280,7 @@ static void OutInteger(R_outpstream_t stream, int i)
     }
 }
 
-static void OutReal(R_outpstream_t stream, double d)
+void OutReal(R_outpstream_t stream, double d)
 {
     char buf[128];
     switch (stream->type) {
@@ -315,13 +327,13 @@ static void OutReal(R_outpstream_t stream, double d)
     }
 }
 
-static void OutComplex(R_outpstream_t stream, Rcomplex c)
+void OutComplex(R_outpstream_t stream, Rcomplex c)
 {
     OutReal(stream, c.r);
     OutReal(stream, c.i);
 }
 
-static void OutByte(R_outpstream_t stream, Rbyte i)
+void OutByte(R_outpstream_t stream, Rbyte i)
 {
     char buf[128];
     switch (stream->type) {
@@ -340,7 +352,7 @@ static void OutByte(R_outpstream_t stream, Rbyte i)
 }
 
 /* This assumes CHARSXPs remain limited to 2^31-1 bytes */
-static void OutString(R_outpstream_t stream, const char *s, int length)
+void OutString(R_outpstream_t stream, const char *s, int length)
 {
     if (stream->type == R_pstream_ascii_format ||
 	stream->type == R_pstream_asciihex_format) {
@@ -383,7 +395,7 @@ static void OutString(R_outpstream_t stream, const char *s, int length)
  * Basic Input Routines
  */
 
-static void InWord(R_inpstream_t stream, char * buf, int size)
+void InWord(R_inpstream_t stream, char * buf, int size)
 {
     int c, i;
     i = 0;
@@ -401,7 +413,7 @@ static void InWord(R_inpstream_t stream, char * buf, int size)
     buf[i] = 0;
 }
 
-static int InInteger(R_inpstream_t stream)
+int InInteger(R_inpstream_t stream)
 {
     char word[128];
     char buf[128];
@@ -432,7 +444,7 @@ extern int trio_sscanf(const char *buffer, const char *format, ...);
 
 #endif
 
-static double InReal(R_inpstream_t stream)
+double InReal(R_inpstream_t stream)
 {
     char word[128];
     char buf[128];
@@ -470,7 +482,7 @@ static double InReal(R_inpstream_t stream)
     }
 }
 
-static Rcomplex InComplex(R_inpstream_t stream)
+Rcomplex InComplex(R_inpstream_t stream)
 {
     Rcomplex c;
     c.r = InReal(stream);
@@ -509,8 +521,7 @@ static void UngetChar(R_instring_stream_t s, int c)
     s->last = c;
 }
 
-
-static void InString(R_inpstream_t stream, char *buf, int length)
+void InString(R_inpstream_t stream, char *buf, int length)
 {
     if (stream->type == R_pstream_ascii_format) {
 	if (length > 0) {
@@ -653,7 +664,7 @@ static SEXP MakeHashTable(void)
     return val;
 }
 
-static void HashAdd(SEXP obj, SEXP ht)
+void HashAdd(SEXP obj, SEXP ht)
 {
     R_size_t pos = PTRHASH(obj) % HASH_TABLE_SIZE(ht);
     int count = HASH_TABLE_COUNT(ht) + 1;
@@ -778,7 +789,7 @@ static void UnpackFlags(int flags, SEXPTYPE *ptype, int *plevs,
 #define UNPACK_REF_INDEX(i) ((i) >> 8)
 #define MAX_PACKED_INDEX (INT_MAX >> 8)
 
-static void OutRefIndex(R_outpstream_t stream, int i)
+void OutRefIndex(R_outpstream_t stream, int i)
 {
     if (i > MAX_PACKED_INDEX) {
 	OutInteger(stream, REFSXP);
@@ -787,7 +798,7 @@ static void OutRefIndex(R_outpstream_t stream, int i)
     else OutInteger(stream, PACK_REF_INDEX(i));
 }
 
-static int InRefIndex(R_inpstream_t stream, int flags)
+int InRefIndex(R_inpstream_t stream, int flags)
 {
     int i = UNPACK_REF_INDEX(flags);
     if (i == 0)
@@ -865,7 +876,7 @@ static void WriteLENGTH(R_outpstream_t stream, SEXP s)
 #endif
 }
 
-static void OutStringVec(R_outpstream_t stream, SEXP s, SEXP ref_table)
+void OutStringVec(R_outpstream_t stream, SEXP s, SEXP ref_table)
 {
     R_assert(TYPEOF(s) == STRSXP);
 
@@ -1002,7 +1013,7 @@ OutComplexVec(R_outpstream_t stream, SEXP s, R_xlen_t length)
     }
 }
 
-static void WriteItem (SEXP s, SEXP ref_table, R_outpstream_t stream)
+void WriteItem (SEXP s, SEXP ref_table, R_outpstream_t stream)
 {
     int i;
     SEXP t;
@@ -1032,17 +1043,6 @@ static void WriteItem (SEXP s, SEXP ref_table, R_outpstream_t stream)
     }
 
  tailcall:
-    if (TYPEOF(s) == EXTERNALSXP) {
-        SEXP exp = externalCodeToExpr(s);
-        PROTECT(exp);
-	int old_cmpl = R_compile_pkgs;
-	R_compile_pkgs = FALSE;
-        WriteItem(exp, ref_table, stream);
-	R_compile_pkgs = old_cmpl;
-        UNPROTECT(1);
-        return;
-    }
-
     R_CheckStack();
     if (ALTREP(s) && stream->version >= 3) {
 	SEXP info = ALTREP_SERIALIZED_CLASS(s);
@@ -1072,6 +1072,8 @@ static void WriteItem (SEXP s, SEXP ref_table, R_outpstream_t stream)
 	OutInteger(stream, i);
     else if ((i = HashGet(s, ref_table)) != 0)
 	OutRefIndex(stream, i);
+    else if (TYPEOF(s) == EXTERNALSXP)
+        externalCodeWrite(s, ref_table, stream);
     else if (TYPEOF(s) == SYMSXP) {
 	/* Note : NILSXP can't occur here */
 	HashAdd(s, ref_table);
@@ -1369,7 +1371,7 @@ static void WriteBC1(SEXP s, SEXP ref_table, SEXP reps, R_outpstream_t stream)
     UNPROTECT(1);
 }
 
-static void WriteBC(SEXP s, SEXP ref_table, R_outpstream_t stream)
+void WriteBC(SEXP s, SEXP ref_table, R_outpstream_t stream)
 {
     SEXP reps = ScanForCircles(s);
     PROTECT(reps = CONS(R_NilValue, reps));
@@ -1439,7 +1441,7 @@ static SEXP GetReadRef(SEXP table, int index)
     return VECTOR_ELT(data, i);
 }
 
-static void AddReadRef(SEXP table, SEXP value)
+void AddReadRef(SEXP table, SEXP value)
 {
     SEXP data = CAR(table);
     R_xlen_t count = TRUELENGTH(data) + 1;
@@ -1756,8 +1758,7 @@ static SEXP R_FindNamespace1(SEXP info)
 }
 
 
-static SEXP ReadItem (SEXP ref_table, R_inpstream_t stream)
-{
+SEXP ReadItem (SEXP ref_table, R_inpstream_t stream) {
     SEXPTYPE type;
     SEXP s;
     R_xlen_t len, count;
@@ -1769,6 +1770,8 @@ static SEXP ReadItem (SEXP ref_table, R_inpstream_t stream)
     UnpackFlags(flags, &type, &levs, &objf, &hasattr, &hastag);
 
     switch(type) {
+    case EXTERNALSXP:
+        return externalCodeRead(ref_table, stream);
     case NILVALUE_SXP:      return R_NilValue;
     case EMPTYENV_SXP:	    return R_EmptyEnv;
     case BASEENV_SXP:	    return R_BaseEnv;
@@ -2124,7 +2127,7 @@ static SEXP ReadBC1(SEXP ref_table, SEXP reps, R_inpstream_t stream)
     return s;
 }
 
-static SEXP ReadBC(SEXP ref_table, R_inpstream_t stream)
+SEXP ReadBC(SEXP ref_table, R_inpstream_t stream)
 {
     SEXP reps, ans;
     PROTECT(reps = allocVector(VECSXP, InInteger(stream)));
@@ -2817,8 +2820,7 @@ static SEXP CloseMemOutPStream(R_outpstream_t stream)
     return val;
 }
 
-static SEXP
-R_serialize(SEXP object, SEXP icon, SEXP ascii, SEXP Sversion, SEXP fun)
+SEXP R_serialize(SEXP object, SEXP icon, SEXP ascii, SEXP Sversion, SEXP fun)
 {
     struct R_outpstream_st out;
     R_pstream_format_t type;
@@ -2874,7 +2876,7 @@ R_serialize(SEXP object, SEXP icon, SEXP ascii, SEXP Sversion, SEXP fun)
 }
 
 
-SEXP attribute_hidden R_unserialize(SEXP icon, SEXP fun)
+SEXP R_unserialize(SEXP icon, SEXP fun)
 {
     struct R_inpstream_st in;
     SEXP (*hook)(SEXP, SEXP);

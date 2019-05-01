@@ -1725,20 +1725,30 @@ typedef struct { SEXP cell; } R_varloc_t; /* use struct to prevent casting */
 #define R_VARLOC_IS_NULL(loc) ((loc).cell == NULL)
 R_varloc_t R_findVarLocInFrame(SEXP, SEXP);
 
+extern void R_SaveToFile(SEXP, FILE*, int);
+extern SEXP R_LoadFromFile(FILE*, int);
+
+// Extra functions exposed for RIR
+extern void WriteItem(SEXP s, SEXP ref_table, R_outpstream_t stream);
+extern SEXP ReadItem(SEXP ref_table, R_inpstream_t stream);
 
 typedef SEXP (*external_code_eval)(SEXP, SEXP);
 typedef SEXP (*external_closure_call)(SEXP, SEXP, SEXP, SEXP, SEXP);
 typedef SEXP (*external_code_compile)(SEXP, SEXP);
 typedef SEXP (*external_code_to_expr)(SEXP);
+typedef void (*external_code_write)(SEXP, SEXP, R_outpstream_t);
+typedef SEXP (*external_code_read)(SEXP, R_inpstream_t);
 typedef SEXP (*external_code_materialize)(void*);
 typedef SEXP* (*external_code_keepAlive)(void*);
-extern external_code_to_expr externalCodeToExpr;
+extern external_code_read externalCodeRead;
+extern external_code_write externalCodeWrite;
 extern external_code_materialize externalMaterialize;
 extern external_code_keepAlive externalKeepAlive;
 extern void registerExternalCode(external_code_eval, external_closure_call,
                                  external_code_compile, external_code_to_expr,
-                                 external_code_materialize, external_code_keepAlive);
-
+                                 external_code_read, external_code_write,
+                                 external_code_materialize,
+                                 external_code_keepAlive);
 
 /* Defining NO_RINLINEDFUNS disables use to simulate platforms where
    this is not available */
