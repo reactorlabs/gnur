@@ -639,19 +639,27 @@ void attribute_hidden R_BCProtReset(R_bcstack_t *ptop)
 static external_code_eval externalCodeEval = NULL;
 static external_closure_call externalClosureCall = NULL;
 static external_code_compile externalCodeCompile = NULL;
-external_code_to_expr externalCodeToExpr = NULL;
-external_code_args_lazy externalArgsLazyCreation = NULL;
+static external_code_to_expr externalCodeToExpr = NULL;
+external_code_read externalCodeRead = NULL;
+external_code_write externalCodeWrite = NULL;
+external_code_materialize externalMaterialize = NULL;
+external_code_keepAlive externalKeepAlive = NULL;
 
 void registerExternalCode(external_code_eval eval,
                           external_closure_call call,
                           external_code_compile compiler,
-                          external_code_to_expr toExpr,
-                          external_code_args_lazy argsLazyCreation) {
+                          external_code_to_expr toExpr, external_code_read read,
+                          external_code_write write,
+                          external_code_materialize materialize,
+                          external_code_keepAlive keepAlive) {
     externalCodeEval = eval;
     externalClosureCall = call;
     externalCodeCompile = compiler;
     externalCodeToExpr = toExpr;
-    externalArgsLazyCreation = argsLazyCreation;
+    externalCodeRead = read;
+    externalCodeWrite = write;
+    externalMaterialize = materialize;
+    externalKeepAlive = keepAlive;
 }
 
 

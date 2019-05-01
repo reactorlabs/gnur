@@ -1912,7 +1912,7 @@ void attribute_hidden R_SaveToFileV(SEXP obj, FILE *fp, int ascii, int version)
     }
 }
 
-void attribute_hidden R_SaveToFile(SEXP obj, FILE *fp, int ascii)
+void R_SaveToFile(SEXP obj, FILE *fp, int ascii)
 {
     R_SaveToFileV(obj, fp, ascii, defaultSaveVersion());
 }
@@ -1920,7 +1920,7 @@ void attribute_hidden R_SaveToFile(SEXP obj, FILE *fp, int ascii)
     /* different handling of errors */
 
 #define return_and_free(X) {r = X; R_FreeStringBuffer(&data.buffer); return r;}
-SEXP attribute_hidden R_LoadFromFile(FILE *fp, int startup)
+SEXP R_LoadFromFile(FILE *fp, int startup)
 {
     struct R_inpstream_st in;
     int magic;
