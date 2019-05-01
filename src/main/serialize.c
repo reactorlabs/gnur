@@ -181,10 +181,7 @@
 /*
  * Forward Declarations
  */
-
 static void OutStringVec(R_outpstream_t stream, SEXP s, SEXP ref_table);
-static void WriteItem (SEXP s, SEXP ref_table, R_outpstream_t stream);
-static SEXP ReadItem(SEXP ref_table, R_inpstream_t stream);
 static void WriteBC(SEXP s, SEXP ref_table, R_outpstream_t stream);
 static SEXP ReadBC(SEXP ref_table, R_inpstream_t stream);
 
@@ -508,7 +505,6 @@ static void UngetChar(R_instring_stream_t s, int c)
 {
     s->last = c;
 }
-
 
 static void InString(R_inpstream_t stream, char *buf, int length)
 {
@@ -1000,7 +996,7 @@ OutComplexVec(R_outpstream_t stream, SEXP s, R_xlen_t length)
     }
 }
 
-static void WriteItem (SEXP s, SEXP ref_table, R_outpstream_t stream)
+void WriteItem (SEXP s, SEXP ref_table, R_outpstream_t stream)
 {
     int i;
     SEXP t;
@@ -1019,13 +1015,8 @@ static void WriteItem (SEXP s, SEXP ref_table, R_outpstream_t stream)
 
  tailcall:
     if (TYPEOF(s) == EXTERNALSXP) {
-        SEXP exp = externalCodeToExpr(s);
-        PROTECT(exp);
-	int old_cmpl = R_compile_pkgs;
-	R_compile_pkgs = FALSE;
-        WriteItem(exp, ref_table, stream);
-	R_compile_pkgs = old_cmpl;
-        UNPROTECT(1);
+	    OutInteger(stream, EXTERNALSXP);
+        externalCodeWrite(s, ref_table, stream);
         return;
     }
 
@@ -1742,8 +1733,7 @@ static SEXP R_FindNamespace1(SEXP info)
 }
 
 
-static SEXP ReadItem (SEXP ref_table, R_inpstream_t stream)
-{
+SEXP ReadItem (SEXP ref_table, R_inpstream_t stream) {
     SEXPTYPE type;
     SEXP s;
     R_xlen_t len, count;
@@ -1755,6 +1745,8 @@ static SEXP ReadItem (SEXP ref_table, R_inpstream_t stream)
     UnpackFlags(flags, &type, &levs, &objf, &hasattr, &hastag);
 
     switch(type) {
+    case EXTERNALSXP:
+        return externalCodeRead(ref_table, stream);
     case NILVALUE_SXP:      return R_NilValue;
     case EMPTYENV_SXP:	    return R_EmptyEnv;
     case BASEENV_SXP:	    return R_BaseEnv;
