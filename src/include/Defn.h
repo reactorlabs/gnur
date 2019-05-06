@@ -1285,10 +1285,6 @@ void materializeIfLazy(SEXP* ctx);
 int isRirDataWrapper(SEXP s);
 uint32_t traceableSEXPs(SEXP s);
 
-// Extra functions exposed for RIR
-extern void WriteItem(SEXP s, SEXP ref_table, R_outpstream_t stream);
-extern SEXP ReadItem(SEXP ref_table, R_inpstream_t stream);
-
 /*
    alloca is neither C99 nor POSIX.
 

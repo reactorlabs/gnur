@@ -179,11 +179,26 @@
    version 2 ALTREP objects are serialied like non-ALTREP ones. */
 
 /*
- * Forward Declarations
+ * Forward Declarations (RIR: made not static and added more)
  */
-static void OutStringVec(R_outpstream_t stream, SEXP s, SEXP ref_table);
-static void WriteBC(SEXP s, SEXP ref_table, R_outpstream_t stream);
-static SEXP ReadBC(SEXP ref_table, R_inpstream_t stream);
+void WriteItem(SEXP s, SEXP ref_table, R_outpstream_t stream);
+SEXP ReadItem(SEXP ref_table, R_inpstream_t stream);
+void OutStringVec(R_outpstream_t stream, SEXP s, SEXP ref_table);
+void WriteBC(SEXP s, SEXP ref_table, R_outpstream_t stream);
+SEXP ReadBC(SEXP ref_table, R_inpstream_t stream);
+void OutInteger(R_outpstream_t stream, int i);
+void OutReal(R_outpstream_t stream, double d);
+void OutComplex(R_outpstream_t stream, Rcomplex c);
+void OutByte(R_outpstream_t stream, Rbyte i);
+void OutString(R_outpstream_t stream, const char *s, int length);
+void InWord(R_inpstream_t stream, char * buf, int size);
+int InInteger(R_inpstream_t stream);
+double InReal(R_inpstream_t stream);
+Rcomplex InComplex(R_inpstream_t stream);
+void InString(R_inpstream_t stream, char *buf, int length);
+void OutRefIndex(R_outpstream_t stream, int i);
+int InRefIndex(R_inpstream_t stream, int flags);
+void OutStringVec(R_outpstream_t stream, SEXP s, SEXP ref_table);
 
 /*
  * Constants
@@ -241,7 +256,7 @@ static int Rsnprintf(char *buf, int size, const char *format, ...)
  * Basic Output Routines
  */
 
-static void OutInteger(R_outpstream_t stream, int i)
+void OutInteger(R_outpstream_t stream, int i)
 {
     char buf[128];
     switch (stream->type) {
@@ -265,7 +280,7 @@ static void OutInteger(R_outpstream_t stream, int i)
     }
 }
 
-static void OutReal(R_outpstream_t stream, double d)
+void OutReal(R_outpstream_t stream, double d)
 {
     char buf[128];
     switch (stream->type) {
@@ -312,13 +327,13 @@ static void OutReal(R_outpstream_t stream, double d)
     }
 }
 
-static void OutComplex(R_outpstream_t stream, Rcomplex c)
+void OutComplex(R_outpstream_t stream, Rcomplex c)
 {
     OutReal(stream, c.r);
     OutReal(stream, c.i);
 }
 
-static void OutByte(R_outpstream_t stream, Rbyte i)
+void OutByte(R_outpstream_t stream, Rbyte i)
 {
     char buf[128];
     switch (stream->type) {
@@ -337,7 +352,7 @@ static void OutByte(R_outpstream_t stream, Rbyte i)
 }
 
 /* This assumes CHARSXPs remain limited to 2^31-1 bytes */
-static void OutString(R_outpstream_t stream, const char *s, int length)
+void OutString(R_outpstream_t stream, const char *s, int length)
 {
     if (stream->type == R_pstream_ascii_format ||
 	stream->type == R_pstream_asciihex_format) {
@@ -380,7 +395,7 @@ static void OutString(R_outpstream_t stream, const char *s, int length)
  * Basic Input Routines
  */
 
-static void InWord(R_inpstream_t stream, char * buf, int size)
+void InWord(R_inpstream_t stream, char * buf, int size)
 {
     int c, i;
     i = 0;
@@ -398,7 +413,7 @@ static void InWord(R_inpstream_t stream, char * buf, int size)
     buf[i] = 0;
 }
 
-static int InInteger(R_inpstream_t stream)
+int InInteger(R_inpstream_t stream)
 {
     char word[128];
     char buf[128];
@@ -429,7 +444,7 @@ extern int trio_sscanf(const char *buffer, const char *format, ...);
 
 #endif
 
-static double InReal(R_inpstream_t stream)
+double InReal(R_inpstream_t stream)
 {
     char word[128];
     char buf[128];
@@ -467,7 +482,7 @@ static double InReal(R_inpstream_t stream)
     }
 }
 
-static Rcomplex InComplex(R_inpstream_t stream)
+Rcomplex InComplex(R_inpstream_t stream)
 {
     Rcomplex c;
     c.r = InReal(stream);
@@ -506,7 +521,7 @@ static void UngetChar(R_instring_stream_t s, int c)
     s->last = c;
 }
 
-static void InString(R_inpstream_t stream, char *buf, int length)
+void InString(R_inpstream_t stream, char *buf, int length)
 {
     if (stream->type == R_pstream_ascii_format) {
 	if (length > 0) {
@@ -772,7 +787,7 @@ static void UnpackFlags(int flags, SEXPTYPE *ptype, int *plevs,
 #define UNPACK_REF_INDEX(i) ((i) >> 8)
 #define MAX_PACKED_INDEX (INT_MAX >> 8)
 
-static void OutRefIndex(R_outpstream_t stream, int i)
+void OutRefIndex(R_outpstream_t stream, int i)
 {
     if (i > MAX_PACKED_INDEX) {
 	OutInteger(stream, REFSXP);
@@ -781,7 +796,7 @@ static void OutRefIndex(R_outpstream_t stream, int i)
     else OutInteger(stream, PACK_REF_INDEX(i));
 }
 
-static int InRefIndex(R_inpstream_t stream, int flags)
+int InRefIndex(R_inpstream_t stream, int flags)
 {
     int i = UNPACK_REF_INDEX(flags);
     if (i == 0)
@@ -859,7 +874,7 @@ static void WriteLENGTH(R_outpstream_t stream, SEXP s)
 #endif
 }
 
-static void OutStringVec(R_outpstream_t stream, SEXP s, SEXP ref_table)
+void OutStringVec(R_outpstream_t stream, SEXP s, SEXP ref_table)
 {
     R_assert(TYPEOF(s) == STRSXP);
 
@@ -1346,7 +1361,7 @@ static void WriteBC1(SEXP s, SEXP ref_table, SEXP reps, R_outpstream_t stream)
     UNPROTECT(1);
 }
 
-static void WriteBC(SEXP s, SEXP ref_table, R_outpstream_t stream)
+void WriteBC(SEXP s, SEXP ref_table, R_outpstream_t stream)
 {
     SEXP reps = ScanForCircles(s);
     PROTECT(reps = CONS(R_NilValue, reps));
@@ -2090,7 +2105,7 @@ static SEXP ReadBC1(SEXP ref_table, SEXP reps, R_inpstream_t stream)
     return s;
 }
 
-static SEXP ReadBC(SEXP ref_table, R_inpstream_t stream)
+SEXP ReadBC(SEXP ref_table, R_inpstream_t stream)
 {
     SEXP reps, ans;
     PROTECT(reps = allocVector(VECSXP, InInteger(stream)));
