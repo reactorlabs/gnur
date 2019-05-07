@@ -1681,6 +1681,9 @@ typedef struct { SEXP cell; } R_varloc_t; /* use struct to prevent casting */
 #define R_VARLOC_IS_NULL(loc) ((loc).cell == NULL)
 R_varloc_t R_findVarLocInFrame(SEXP, SEXP);
 
+extern void R_SaveToFile(SEXP, FILE*, int);
+extern SEXP R_LoadFromFile(FILE*, int);
+
 // Extra functions exposed for RIR
 extern void WriteItem(SEXP s, SEXP ref_table, R_outpstream_t stream);
 extern SEXP ReadItem(SEXP ref_table, R_inpstream_t stream);
