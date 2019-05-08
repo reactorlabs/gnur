@@ -1030,7 +1030,6 @@ void WriteItem (SEXP s, SEXP ref_table, R_outpstream_t stream)
 
  tailcall:
     if (TYPEOF(s) == EXTERNALSXP) {
-	    OutInteger(stream, EXTERNALSXP);
         externalCodeWrite(s, ref_table, stream);
         return;
     }
@@ -2798,8 +2797,7 @@ static SEXP CloseMemOutPStream(R_outpstream_t stream)
     return val;
 }
 
-static SEXP
-R_serialize(SEXP object, SEXP icon, SEXP ascii, SEXP Sversion, SEXP fun)
+SEXP R_serialize(SEXP object, SEXP icon, SEXP ascii, SEXP Sversion, SEXP fun)
 {
     struct R_outpstream_st out;
     R_pstream_format_t type;
@@ -2855,7 +2853,7 @@ R_serialize(SEXP object, SEXP icon, SEXP ascii, SEXP Sversion, SEXP fun)
 }
 
 
-SEXP attribute_hidden R_unserialize(SEXP icon, SEXP fun)
+SEXP R_unserialize(SEXP icon, SEXP fun)
 {
     struct R_inpstream_st in;
     SEXP (*hook)(SEXP, SEXP);
