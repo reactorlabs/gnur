@@ -662,7 +662,7 @@ static SEXP MakeHashTable(void)
     return val;
 }
 
-static void HashAdd(SEXP obj, SEXP ht)
+void HashAdd(SEXP obj, SEXP ht)
 {
     R_size_t pos = PTRHASH(obj) % HASH_TABLE_SIZE(ht);
     int count = HASH_TABLE_COUNT(ht) + 1;
@@ -1430,7 +1430,7 @@ static SEXP GetReadRef(SEXP table, int index)
     return VECTOR_ELT(data, i);
 }
 
-static void AddReadRef(SEXP table, SEXP value)
+void AddReadRef(SEXP table, SEXP value)
 {
     SEXP data = CAR(table);
     R_xlen_t count = TRUELENGTH(data) + 1;
