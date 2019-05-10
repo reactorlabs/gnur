@@ -1029,11 +1029,6 @@ void WriteItem (SEXP s, SEXP ref_table, R_outpstream_t stream)
     }
 
  tailcall:
-    if (TYPEOF(s) == EXTERNALSXP) {
-        externalCodeWrite(s, ref_table, stream);
-        return;
-    }
-
     R_CheckStack();
     if (ALTREP(s) && stream->version >= 3) {
 	SEXP info = ALTREP_SERIALIZED_CLASS(s);
@@ -1063,6 +1058,8 @@ void WriteItem (SEXP s, SEXP ref_table, R_outpstream_t stream)
 	OutInteger(stream, i);
     else if ((i = HashGet(s, ref_table)) != 0)
 	OutRefIndex(stream, i);
+    else if (TYPEOF(s) == EXTERNALSXP)
+        externalCodeWrite(s, ref_table, stream);
     else if (TYPEOF(s) == SYMSXP) {
 	/* Note : NILSXP can't occur here */
 	HashAdd(s, ref_table);
