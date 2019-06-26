@@ -405,6 +405,7 @@ SEXP dispatchMethod(SEXP op, SEXP sxp, SEXP dotClass, RCNTXT *cptr, SEXP method,
     SEXP newcall =  PROTECT(duplicate(cptr->call));
     SETCAR(newcall, method);
     R_GlobalContext->callflag = CTXT_GENERIC;
+    materializeIfLazy(&(cptr->promargs));
     SEXP matchedarg = PROTECT(cptr->promargs); /* ? is this PROTECT needed ? */
     SEXP ans = applyMethod(newcall, sxp, matchedarg, rho, newvars);
     R_GlobalContext->callflag = CTXT_RETURN;

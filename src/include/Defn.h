@@ -53,7 +53,7 @@
 #endif
 
 #ifdef __MAIN__
-# define extern0 attribute_hidden
+# define extern0
 #else
 # define extern0 extern
 #endif
@@ -535,10 +535,8 @@ FUNTAB	R_FunTab[];	    /* Built in functions */
 
 #ifdef __MAIN__
 # define INI_as(v) = v
-#define extern0 attribute_hidden
 #else
 # define INI_as(v)
-#define extern0 extern
 #endif
 
 LibExtern SEXP  R_SrcfileSymbol;    /* "srcfile" */

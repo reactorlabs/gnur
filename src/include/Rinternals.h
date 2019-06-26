@@ -1851,6 +1851,11 @@ void SET_REAL_ELT(SEXP x, R_xlen_t i, double v);
     } while (FALSE)
 #endif
 
+extern struct RPRSTACK *R_PendingPromises; /* Pending promise stack */
+extern int	R_BCIntActive; /* bcEval called more recently than eval */
+extern int	R_EvalDepth;	/* Evaluation recursion depth */
+extern int	R_Expressions;	/* options(expressions) */
+extern int	R_Expressions_keep;/* options(expressions) */
 
 #ifdef __cplusplus
 }
