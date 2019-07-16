@@ -1816,7 +1816,8 @@ SEXP attribute_hidden do_list2env(SEXP call, SEXP op, SEXP args, SEXP rho)
 
     for(int i = 0; i < n; i++) {
 	SEXP name = installTrChar(STRING_ELT(xnms, i));
-	defineVar(name, VECTOR_ELT(x, i), envir);
+	INCREMENT_NAMED(VECTOR_ELT(x, i));
+    defineVar(name, VECTOR_ELT(x, i), envir);
     }
 
     return envir;
