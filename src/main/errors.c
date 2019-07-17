@@ -1127,6 +1127,7 @@ static char * determine_domain_gettext(SEXP domain_, SEXP rho)
 		    ns = R_NamespaceEnvSpec(rho);
 		    break;
 		}
+                materializeIfLazy(cptr->cloenv);
 		rho = ENCLOS(rho);
 	    }
 	}

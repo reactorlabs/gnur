@@ -111,14 +111,18 @@
 #include <Defn.h>
 #include <Internal.h>
 
-// create arglist lazily if coming from rir and rir did not do it
-void lazyCreatePromArgs(RCNTXT* ctx) {
-    if (isRirDataWrapper(ctx->promargs))
-        ctx->promargs = externalArgsLazyCreation((void*)ctx->promargs);
-}
-
- int isRirDataWrapper(SEXP promargs) {
-    return *((uint32_t*)(promargs)) == LAZY_ARGS_MAGIC_RIR;
+void materializeIfLazy(SEXP s){
+    if (TYPEOF(s) == EXTERNALSXP) {
+        SEXP mat = externalMaterialize((void*)s);
+        if (TYPEOF(mat) == LISTSXP) {
+            RCNTXT* cur = R_GlobalContext;
+            while (cur) {
+                if (cur->promargs == s)
+                    cur->promargs = mat;
+                cur = cur->nextcontext;
+            }
+        }
+    }
 }
 
 /* R_run_onexits - runs the conexit/cend code for all contexts from
@@ -397,7 +401,8 @@ SEXP attribute_hidden R_sysframe(int n, RCNTXT *cptr)
     while (cptr->nextcontext != NULL) {
 	if (cptr->callflag & CTXT_FUNCTION ) {
 	    if (n == 0) {  /* we need to detach the enclosing env */
-		return cptr->cloenv;
+		    materializeIfLazy(cptr->cloenv);
+            return cptr->cloenv;
 	    }
 	    else
 		n--;
@@ -433,6 +438,7 @@ int attribute_hidden R_sysparent(int n, RCNTXT *cptr)
     /* make sure we're looking at a return context */
     while (cptr->nextcontext != NULL && !(cptr->callflag & CTXT_FUNCTION) )
 	cptr = cptr->nextcontext;
+    materializeIfLazy(cptr->sysparent);
     s = cptr->sysparent;
     if(s == R_GlobalEnv)
 	return 0;
@@ -596,8 +602,7 @@ SEXP attribute_hidden do_sysbrowser(SEXP call, SEXP op, SEXP args, SEXP rho)
 	if( !(cptr->callflag == CTXT_BROWSER) )
 	   error(_("not that many calls to browser are active"));
 
-	lazyCreatePromArgs(cptr);
-
+	materializeIfLazy(cptr->promargs);
 	if( PRIMVAL(op) == 1 )
 	    rval = CAR(cptr->promargs);
 	else
