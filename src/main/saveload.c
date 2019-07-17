@@ -2059,7 +2059,8 @@ static SEXP RestoreToEnv(SEXP ans, SEXP aenv)
 	for (i = 0; i < LENGTH(ans); i++) {
 	    SEXP sym = installTrChar(STRING_ELT(names, i));
 	    obj = VECTOR_ELT(ans, i);
-	    defineVar(sym, obj, aenv);
+	    INCREMENT_NAMED(obj);
+        defineVar(sym, obj, aenv);
 	    if(R_seemsOldStyleS4Object(obj))
 		warningcall(R_NilValue,
 			    _("'%s' looks like a pre-2.4.0 S4 object: please recreate it"),
@@ -2080,7 +2081,8 @@ static SEXP RestoreToEnv(SEXP ans, SEXP aenv)
     a = ans;
     while (a != R_NilValue) {
 	SET_STRING_ELT(names, cnt++, PRINTNAME(TAG(a)));
-	defineVar(TAG(a), CAR(a), aenv);
+	INCREMENT_NAMED(CAR(a));
+    defineVar(TAG(a), CAR(a), aenv);
 	if(R_seemsOldStyleS4Object(CAR(a)))
 	    warningcall(R_NilValue,
 			_("'%s' looks like a pre-2.4.0 S4 object: please recreate it"),
