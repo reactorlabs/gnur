@@ -1057,8 +1057,9 @@ SEXP attribute_hidden do_gettext(SEXP call, SEXP op, SEXP args, SEXP rho)
 		cfn = CHAR(STRING_ELT(deparse1s(CAR(cptr->call)), 0));
 		if(streql(cfn, "stop") || streql(cfn, "warning")
 		   || streql(cfn, "message")) continue;
-		rho = cptr->cloenv;
-	    }
+	}
+	materializeIfLazy(cptr->cloenv);	
+	rho = cptr->cloenv;
 	while(rho != R_EmptyEnv) {
 	    if (rho == R_GlobalEnv) break;
 	    else if (R_IsNamespaceEnv(rho)) {

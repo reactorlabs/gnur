@@ -1315,9 +1315,7 @@ extern const char *locale2charset(const char *);
 } while(0)
 
 // Helpers needed to interact with RIR
-#define RIR_DATA_WRAPPER_MAGIC 0xda7a0403
-void materializeIfLazy(SEXP* ctx);
-int isRirDataWrapper(SEXP s);
+void materializeIfLazy(SEXP ctx);
 uint32_t traceableSEXPs(SEXP s);
 
 /*

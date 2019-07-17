@@ -295,8 +295,10 @@ SEXP attribute_hidden do_envir(SEXP call, SEXP op, SEXP args, SEXP rho)
     checkArity(op, args);
     if (TYPEOF(CAR(args)) == CLOSXP)
 	return CLOENV(CAR(args));
-    else if (CAR(args) == R_NilValue)
+    else if (CAR(args) == R_NilValue) {
+        materializeIfLazy(R_GlobalContext->sysparent);
 	return R_GlobalContext->sysparent;
+    }
     else return getAttrib(CAR(args), R_DotEnvSymbol);
 }
 

@@ -760,20 +760,6 @@ uint32_t traceableSEXPs(SEXP s) {
   } \
 } while (0)
 
-#define FORWARD_NODE_MAYBE_STUB(s) do { \
-    if (isRirDataWrapper(s)) { \
-        if (traceableSEXPs(s)) { \
-            SEXP* sexps = externalKeepAlive(s); \
-            for (int i = 0; i < traceableSEXPs(s); i++) { \
-                FORWARD_NODE(sexps[i]); \
-            } \
-        } \
-    } else { \
-        FORWARD_NODE(s); \
-    } \
-} while (0)
-
-
 #define FC_FORWARD_NODE(__n__,__dummy__) FORWARD_NODE(__n__)
 #define FORWARD_CHILDREN(__n__) DO_CHILDREN(__n__,FC_FORWARD_NODE, 0)
 
@@ -1747,11 +1733,11 @@ static int RunGenCollect(R_size_t size_needed)
 
     for (ctxt = R_GlobalContext ; ctxt != NULL ; ctxt = ctxt->nextcontext) {
 	FORWARD_NODE(ctxt->conexit);       /* on.exit expressions */
-	FORWARD_NODE_MAYBE_STUB(ctxt->promargs);
+	FORWARD_NODE(ctxt->promargs);
 	FORWARD_NODE(ctxt->callfun);       /* the closure called */
-	FORWARD_NODE_MAYBE_STUB(ctxt->sysparent);     /* calling environment */
+	FORWARD_NODE(ctxt->sysparent);     /* calling environment */
 	FORWARD_NODE(ctxt->call);          /* the call */
-	FORWARD_NODE_MAYBE_STUB(ctxt->cloenv);        /* the closure environment */
+	FORWARD_NODE(ctxt->cloenv);        /* the closure environment */
 	FORWARD_NODE(ctxt->bcbody);        /* the current byte code object */
 	FORWARD_NODE(ctxt->handlerstack);  /* the condition handler stack */
 	FORWARD_NODE(ctxt->restartstack);  /* the available restarts stack */
@@ -1770,7 +1756,7 @@ static int RunGenCollect(R_size_t size_needed)
 	if (sp->tag == RAWMEM_TAG)
 	    sp += sp->u.ival;
 	else if (sp->tag == 0 || IS_PARTIAL_SXP_TAG(sp->tag))
-	    FORWARD_NODE_MAYBE_STUB(sp->u.sxpval);
+	    FORWARD_NODE(sp->u.sxpval);
     }
 
     /* main processing loop */
