@@ -310,7 +310,9 @@ SEXP R_quick_dispatch(SEXP args, SEXP genericEnv, SEXP fdef)
 	    if(PRVALUE(object) == R_UnboundValue) {
 		SEXP tmp = eval(PRCODE(object), PRENV(object));
 		PROTECT(tmp); nprotect++;
-		SET_PRVALUE(object,  tmp);
+		// Why GNU-R did not ensure named here???
+        ENSURE_NAMEDMAX(tmp);
+        SET_PRVALUE(object,  tmp);
 		object = tmp;
 	    }
 	    else

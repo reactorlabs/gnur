@@ -1816,7 +1816,9 @@ SEXP attribute_hidden do_list2env(SEXP call, SEXP op, SEXP args, SEXP rho)
 
     for(int i = 0; i < n; i++) {
 	SEXP name = installTrChar(STRING_ELT(xnms, i));
-	INCREMENT_NAMED(VECTOR_ELT(x, i));
+	// Creating an env based on a list of names and objects should increment
+	// the name of the objects, shouldn't it?
+    INCREMENT_NAMED(VECTOR_ELT(x, i));
     defineVar(name, VECTOR_ELT(x, i), envir);
     }
 

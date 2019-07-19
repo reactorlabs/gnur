@@ -2059,7 +2059,9 @@ static SEXP RestoreToEnv(SEXP ans, SEXP aenv)
 	for (i = 0; i < LENGTH(ans); i++) {
 	    SEXP sym = installTrChar(STRING_ELT(names, i));
 	    obj = VECTOR_ELT(ans, i);
-	    INCREMENT_NAMED(obj);
+	    // Creating an env based on a list of names and objects should increment
+	    // the name of the objects, shouldn't it?
+        INCREMENT_NAMED(obj);
         defineVar(sym, obj, aenv);
 	    if(R_seemsOldStyleS4Object(obj))
 		warningcall(R_NilValue,
