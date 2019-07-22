@@ -135,6 +135,7 @@
   if (IS_ACTIVE_BINDING(__sym__)) \
     setActiveValue(SYMVALUE(__sym__), __val__); \
   else \
+    INCREMENT_NAMED(__val__); \
     SET_SYMVALUE(__sym__, __val__); \
 } while (0)
 
