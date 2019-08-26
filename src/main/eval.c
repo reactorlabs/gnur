@@ -540,13 +540,17 @@ external_code_read externalCodeRead = NULL;
 external_code_write externalCodeWrite = NULL;
 external_code_materialize externalMaterialize = NULL;
 external_code_keepAlive externalKeepAlive = NULL;
+external_setup_context externalSetupContext = NULL;
+external_teardown_context externalTeardownContext = NULL;
 
 void registerExternalCode(external_code_eval eval, external_closure_call call,
                           external_code_compile compiler,
                           external_code_to_expr toExpr, external_code_read read,
                           external_code_write write,
                           external_code_materialize materialize,
-                          external_code_keepAlive keepAlive) {
+                          external_code_keepAlive keepAlive,
+													external_setup_context setupContext,
+													external_teardown_context teardownContext) {
     externalCodeEval = eval;
     externalClosureCall = call;
     externalCodeCompile = compiler;
@@ -554,7 +558,9 @@ void registerExternalCode(external_code_eval eval, external_closure_call call,
     externalCodeRead = read;
     externalCodeWrite = write;
     externalMaterialize = materialize;
-	externalKeepAlive = keepAlive;
+		externalKeepAlive = keepAlive;
+		externalSetupContext = setupContext;
+		externalTeardownContext = teardownContext;
 }
 
 /* Return value of "e" evaluated in "rho". */

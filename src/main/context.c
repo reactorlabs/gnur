@@ -289,6 +289,7 @@ void begincontext(RCNTXT * cptr, int flags,
     cptr->jumptarget = NULL;
     cptr->jumpmask = 0;
 
+    externalSetupContext(cptr);
     R_GlobalContext = cptr;
 }
 
@@ -323,6 +324,7 @@ void endcontext(RCNTXT * cptr)
     }
     if (R_ExitContext == cptr)
 	R_ExitContext = NULL;
+    externalTeardownContext(cptr);
     /* continue jumping if this was reached as an intermetiate jump */
     if (jumptarget)
 	/* cptr->returnValue is undefined */

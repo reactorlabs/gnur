@@ -1594,6 +1594,9 @@ typedef struct RCNTXT {
     SEXP returnValue;           /* only set during on.exit calls */
     struct RCNTXT *jumptarget;	/* target for a continuing jump */
     int jumpmask;               /* associated LONGJMP argument */
+// --- FROM RIR
+    void* external_env_tracker;
+// ---
 } RCNTXT, *context;
 
 /* The Various Context Types.
@@ -1696,15 +1699,22 @@ typedef void (*external_code_write)(SEXP, SEXP, R_outpstream_t);
 typedef SEXP (*external_code_read)(SEXP, R_inpstream_t);
 typedef SEXP (*external_code_materialize)(void*);
 typedef SEXP* (*external_code_keepAlive)(void*);
+typedef SEXP* (*external_code_keepAlive)(void*);
+typedef void (*external_setup_context)(RCNTXT*);
+typedef void (*external_teardown_context)(RCNTXT*);
 extern external_code_read externalCodeRead;
 extern external_code_write externalCodeWrite;
 extern external_code_materialize externalMaterialize;
 extern external_code_keepAlive externalKeepAlive;
+extern external_setup_context externalSetupContext;
+extern external_teardown_context externalTeardownContext;
 extern void registerExternalCode(external_code_eval, external_closure_call,
                                  external_code_compile, external_code_to_expr,
                                  external_code_read, external_code_write,
                                  external_code_materialize,
-                                 external_code_keepAlive);
+                                 external_code_keepAlive,
+                                 external_setup_context,
+                                 external_teardown_context);
 
 /* Defining NO_RINLINEDFUNS disables use to simulate platforms where
    this is not available */
