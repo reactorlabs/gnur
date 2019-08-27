@@ -1696,15 +1696,19 @@ typedef void (*external_code_write)(SEXP, SEXP, R_outpstream_t);
 typedef SEXP (*external_code_read)(SEXP, R_inpstream_t);
 typedef SEXP (*external_code_materialize)(void*);
 typedef SEXP* (*external_code_keepAlive)(void*);
+typedef void (*external_invalidate_cache)(SEXP, unsigned);
 extern external_code_read externalCodeRead;
 extern external_code_write externalCodeWrite;
 extern external_code_materialize externalMaterialize;
 extern external_code_keepAlive externalKeepAlive;
+extern external_invalidate_cache externalInvalidateCache;
+
 extern void registerExternalCode(external_code_eval, external_closure_call,
                                  external_code_compile, external_code_to_expr,
                                  external_code_read, external_code_write,
                                  external_code_materialize,
-                                 external_code_keepAlive);
+                                 external_code_keepAlive,
+                                 external_invalidate_cache);
 
 /* Defining NO_RINLINEDFUNS disables use to simulate platforms where
    this is not available */
