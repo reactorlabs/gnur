@@ -1698,10 +1698,13 @@ typedef SEXP (*external_code_materialize)(SEXP);
 extern external_code_read externalCodeRead;
 extern external_code_write externalCodeWrite;
 extern external_code_materialize externalMaterialize;
+extern external_invalidate_cache externalInvalidateCache;
+
 extern void registerExternalCode(external_code_eval, external_closure_call,
                                  external_code_compile, external_code_to_expr,
                                  external_code_read, external_code_write,
-                                 external_code_materialize);
+                                 external_code_materialize,
+                                 external_invalidate_cache);
 
 /* Defining NO_RINLINEDFUNS disables use to simulate platforms where
    this is not available */
