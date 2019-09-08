@@ -11,7 +11,7 @@
  *  This file is part of R. R is distributed under the terms of the
  *  GNU General Public License, either Version 2, June 1991 or Version 3,
  *  June 2007. See doc/COPYRIGHTS for details of the copyright status of R.
- *  
+ *
  *  This program is distributed in the hope that it will be useful,
  *  but WITHOUT ANY WARRANTY; without even the implied warranty of
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -707,7 +707,7 @@ SEXP ALTREAL_MAX(SEXP x, Rboolean narm);
 SEXP INTEGER_MATCH(SEXP, SEXP, int, SEXP, SEXP, Rboolean);
 SEXP INTEGER_IS_NA(SEXP x);
 SEXP REAL_MATCH(SEXP, SEXP, int, SEXP, SEXP, Rboolean);
-	
+
 R_xlen_t REAL_GET_REGION(SEXP sx, R_xlen_t i, R_xlen_t n, double *buf);
 int REAL_IS_SORTED(SEXP x);
 int REAL_NO_NA(SEXP x);
@@ -1509,6 +1509,11 @@ void R_orderVector1(int *indx, int n, SEXP x,       Rboolean nalast, Rboolean de
 #define externRir extern
 #endif
 
+typedef struct external_env_stack {
+    SEXP env;
+    struct external_env_stack *next;
+} external_env_stack;
+extern struct external_env_stack *R_ExternalEnvStack;
 
 #define TYPED_STACK
 #ifdef TYPED_STACK
@@ -1584,6 +1589,7 @@ typedef struct RCNTXT {
     SEXP handlerstack;          /* condition handler stack */
     SEXP restartstack;          /* stack of available restarts */
     struct RPRSTACK *prstack;   /* stack of pending promises */
+    struct external_env_stack *externalEnvStack;
     R_bcstack_t *nodestack;
 #ifdef BC_INT_STACK
     IStackval *intstack;
@@ -1696,19 +1702,22 @@ typedef void (*external_code_write)(SEXP, SEXP, R_outpstream_t);
 typedef SEXP (*external_code_read)(SEXP, R_inpstream_t);
 typedef SEXP (*external_code_materialize)(void*);
 typedef SEXP* (*external_code_keepAlive)(void*);
-typedef void (*external_invalidate_cache)(SEXP, unsigned);
+typedef void (*external_modify_env_var)(SEXP, unsigned);
+typedef void (*external_begin_exec_closure)(SEXP, SEXP, SEXP, SEXP, SEXP, SEXP);
 extern external_code_read externalCodeRead;
 extern external_code_write externalCodeWrite;
 extern external_code_materialize externalMaterialize;
 extern external_code_keepAlive externalKeepAlive;
-extern external_invalidate_cache externalInvalidateCache;
+extern external_modify_env_var externalModifyEnvVar;
+extern external_begin_exec_closure externalBeginExecClosure;
 
 extern void registerExternalCode(external_code_eval, external_closure_call,
                                  external_code_compile, external_code_to_expr,
                                  external_code_read, external_code_write,
                                  external_code_materialize,
                                  external_code_keepAlive,
-                                 external_invalidate_cache);
+                                 external_modify_env_var,
+                                 external_begin_exec_closure);
 
 /* Defining NO_RINLINEDFUNS disables use to simulate platforms where
    this is not available */

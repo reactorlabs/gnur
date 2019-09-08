@@ -1527,8 +1527,8 @@ void defineVar(SEXP symbol, SEXP value, SEXP rho)
 	error(_("cannot assign values in the empty environment"));
 
     if(IS_USER_DATABASE(rho)) {
-    if (externalInvalidateCache != NULL)
-        externalInvalidateCache(rho, 1);
+    if (externalModifyEnvVar != NULL)
+        externalModifyEnvVar(rho, 1);
 	R_ObjectTable *table;
 	table = (R_ObjectTable *) R_ExternalPtrAddr(HASHTAB(rho));
 	if(table->assign == NULL)
@@ -1543,8 +1543,8 @@ void defineVar(SEXP symbol, SEXP value, SEXP rho)
     }
 
     if (rho == R_BaseNamespace || rho == R_BaseEnv) {
-    if (externalInvalidateCache != NULL)
-        externalInvalidateCache(rho, 1);
+    if (externalModifyEnvVar != NULL)
+        externalModifyEnvVar(rho, 1);
 	gsetVar(symbol, value, rho);
     } else {
 #ifdef USE_GLOBAL_CACHE
@@ -1567,14 +1567,14 @@ void defineVar(SEXP symbol, SEXP value, SEXP rho)
 	    }
 	    if (FRAME_IS_LOCKED(rho))
 		error(_("cannot add bindings to a locked environment"));
-        if (externalInvalidateCache != NULL)
-            externalInvalidateCache(rho, 1);
+        if (externalModifyEnvVar != NULL)
+            externalModifyEnvVar(rho, 1);
 	    SET_FRAME(rho, CONS(value, FRAME(rho)));
 	    SET_TAG(FRAME(rho), symbol);
 	}
 	else {
-        if (externalInvalidateCache != NULL)
-            externalInvalidateCache(rho, 1);
+        if (externalModifyEnvVar != NULL)
+            externalModifyEnvVar(rho, 1);
 	    c = PRINTNAME(symbol);
 	    if( !HASHASH(c) ) {
 		SET_HASHVALUE(c, R_Newhashpjw(CHAR(c)));
@@ -1655,8 +1655,8 @@ void addMissingVarsToNewEnv(SEXP env, SEXP addVars)
 
 static SEXP setVarInFrame(SEXP rho, SEXP symbol, SEXP value)
 {
-    if (externalInvalidateCache != NULL)
-        externalInvalidateCache(rho, 0);
+    if (externalModifyEnvVar != NULL)
+        externalModifyEnvVar(rho, 0);
 
     int hashcode;
     SEXP frame, c;

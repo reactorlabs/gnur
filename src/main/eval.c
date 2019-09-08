@@ -30,6 +30,15 @@
 #include <Fileio.h>
 #include <R_ext/Print.h>
 
+#define BEGIN_TRACK_ENV(rho)\
+	external_env_stack envStackEntry;\
+	envStackEntry.env = rho;\
+	envStackEntry.next = R_ExternalEnvStack;\
+	R_ExternalEnvStack = &envStackEntry;
+
+#define END_TRACK_ENV(env)\
+	R_ExternalEnvStack = envStackEntry.next;
+
 
 static SEXP bcEval(SEXP, SEXP, Rboolean);
 
@@ -516,9 +525,11 @@ SEXP forcePromise(SEXP e)
 	prstack.promise = e;
 	prstack.next = R_PendingPromises;
 	R_PendingPromises = &prstack;
+	BEGIN_TRACK_ENV(PRENV(e));
 
 	val = eval(PRCODE(e), PRENV(e));
 
+	END_TRACK_ENV();
 	/* Pop the stack, unmark the promise and set its value field.
 	   Also set the environment to R_NilValue to allow GC to
 	   reclaim the promise environment; this is also useful for
@@ -540,7 +551,9 @@ external_code_read externalCodeRead = NULL;
 external_code_write externalCodeWrite = NULL;
 external_code_materialize externalMaterialize = NULL;
 external_code_keepAlive externalKeepAlive = NULL;
-external_invalidate_cache externalInvalidateCache = NULL;
+external_modify_env_var externalModifyEnvVar = NULL;
+external_begin_exec_closure externalBeginExecClosure = NULL;
+struct external_env_stack *R_ExternalEnvStack = NULL;
 
 void registerExternalCode(external_code_eval eval, external_closure_call call,
                           external_code_compile compiler,
@@ -548,7 +561,8 @@ void registerExternalCode(external_code_eval eval, external_closure_call call,
                           external_code_write write,
                           external_code_materialize materialize,
                           external_code_keepAlive keepAlive,
-													external_invalidate_cache invalidateCache) {
+													external_modify_env_var modifyEnvVar,
+													external_begin_exec_closure beginExecClosure) {
     externalCodeEval = eval;
     externalClosureCall = call;
     externalCodeCompile = compiler;
@@ -557,7 +571,8 @@ void registerExternalCode(external_code_eval eval, external_closure_call call,
     externalCodeWrite = write;
     externalMaterialize = materialize;
 		externalKeepAlive = keepAlive;
-		externalInvalidateCache = invalidateCache;
+		externalModifyEnvVar = modifyEnvVar;
+		externalBeginExecClosure = beginExecClosure;
 }
 
 /* Return value of "e" evaluated in "rho". */
@@ -743,6 +758,8 @@ SEXP eval(SEXP e, SEXP rho)
 	    vmaxset(vmax);
 	}
 	else if (TYPEOF(op) == BUILTINSXP) {
+		if (externalBeginExecClosure != NULL)
+			externalBeginExecClosure(e, R_BaseEnv, R_BaseEnv, R_EmptyEnv, R_NilValue, op);
 	    int save = R_PPStackTop, flag = PRIMPRINT(op);
 	    const void *vmax = vmaxget();
 	    RCNTXT cntxt;
@@ -755,7 +772,9 @@ SEXP eval(SEXP e, SEXP rho)
 		begincontext(&cntxt, CTXT_BUILTIN, e,
 			     R_BaseEnv, R_BaseEnv, R_NilValue, R_NilValue);
 		R_Srcref = NULL;
+		BEGIN_TRACK_ENV(rho);
 		tmp = PRIMFUN(op) (e, op, tmp, rho);
+		END_TRACK_ENV();
 		R_Srcref = oldref;
 		endcontext(&cntxt);
 	    } else {
@@ -1529,7 +1548,7 @@ static R_INLINE Rboolean R_isReplaceSymbol(SEXP fun)
 	strstr(CHAR(PRINTNAME(fun)), "<-"))
 	return TRUE;
     else return FALSE;
-}	
+}
 #endif
 
 /* There's another copy of this in main.c */
@@ -1767,6 +1786,9 @@ SEXP applyClosure(SEXP call, SEXP op, SEXP arglist, SEXP rho, SEXP suppliedvars)
 static R_INLINE SEXP R_execClosure(SEXP call, SEXP newrho, SEXP sysparent,
                                    SEXP rho, SEXP arglist, SEXP op)
 {
+		if (externalBeginExecClosure != NULL)
+			externalBeginExecClosure(call, newrho, sysparent, rho, arglist, op);
+
     volatile SEXP body;
     RCNTXT cntxt;
     Rboolean dbg = FALSE;
@@ -1809,6 +1831,8 @@ static R_INLINE SEXP R_execClosure(SEXP call, SEXP newrho, SEXP sysparent,
     /*  Set a longjmp target which will catch any explicit returns
 	from the function body.  */
 
+	BEGIN_TRACK_ENV(newrho);
+
     if ((SETJMP(cntxt.cjmpbuf))) {
 	if (!cntxt.jumptarget) {
 	    /* ignores intermediate jumps for on.exits */
@@ -1825,6 +1849,8 @@ static R_INLINE SEXP R_execClosure(SEXP call, SEXP newrho, SEXP sysparent,
     else
 	/* make it available to on.exit and implicitly protect */
 	cntxt.returnValue = eval(body, newrho);
+
+	END_TRACK_ENV();
 
     R_Srcref = cntxt.srcref;
     endcontext(&cntxt);
@@ -6611,7 +6637,7 @@ static SEXP bcEval(SEXP body, SEXP rho, Rboolean useCache)
 		int tag = s->tag;
 		if (R_BCNodeStackTop - vcache_top > MAX_ON_STACK_CHECK ||
 		    FIND_ON_STACK(x, vcache_top, TRUE))
-		    tag = 0;		
+		    tag = 0;
 
 		switch (tag) {
 		case REALSXP: SET_SCALAR_DVAL(x, s->u.dval); NEXT();
@@ -6717,7 +6743,7 @@ static SEXP bcEval(SEXP body, SEXP rho, Rboolean useCache)
 	if (ftype != SPECIALSXP) {
 	  SEXP value;
 	  if (ftype == BUILTINSXP) {
-	    if (TYPEOF(code) == BCODESXP) 
+	    if (TYPEOF(code) == BCODESXP)
 	      value = bcEval(code, rho, TRUE);
 	    else
 	      /* uncommon but possible, the compiler may decide not to compile
