@@ -112,12 +112,8 @@
 #include <Internal.h>
 
 void materializeIfLazy(SEXP* s){
-    if (isRirDataWrapper(*s))
+    if (TYPEOF(*s) == EXTERNALSXP)
         *s = externalMaterialize((void*)*s);    
-}
-
-int isRirDataWrapper(SEXP s) {
-    return *((uint32_t*)(s)) == RIR_DATA_WRAPPER_MAGIC;
 }
 
 /* R_run_onexits - runs the conexit/cend code for all contexts from
