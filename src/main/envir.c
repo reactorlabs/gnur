@@ -831,6 +831,9 @@ static SEXP RemoveFromList(SEXP thing, SEXP list, int *found)
 
 void attribute_hidden unbindVar(SEXP symbol, SEXP rho)
 {
+    if (externalWillAccessEnvVar != NULL)
+        externalWillAccessEnvVar(rho, 0);
+
     int hashcode;
     SEXP c;
 
@@ -882,6 +885,9 @@ void attribute_hidden unbindVar(SEXP symbol, SEXP rho)
 
 static SEXP findVarLocInFrame(SEXP rho, SEXP symbol, Rboolean *canCache)
 {
+    if (externalWillAccessEnvVar != NULL)
+        externalWillAccessEnvVar(rho, 3);
+
     int hashcode;
     SEXP frame, c;
 
@@ -996,6 +1002,9 @@ void R_SetVarLocValue(R_varloc_t vl, SEXP value)
 
 SEXP findVarInFrame3(SEXP rho, SEXP symbol, Rboolean doGet)
 {
+    if (externalWillAccessEnvVar != NULL)
+        externalWillAccessEnvVar(rho, 3);
+
     int hashcode;
     SEXP frame, c;
 
@@ -1049,6 +1058,9 @@ SEXP findVarInFrame3(SEXP rho, SEXP symbol, Rboolean doGet)
    binding functions in calls to exists() with mode = "any" */
 static Rboolean existsVarInFrame(SEXP rho, SEXP symbol)
 {
+    if (externalWillAccessEnvVar != NULL)
+        externalWillAccessEnvVar(rho, 3);
+
     int hashcode;
     SEXP frame, c;
 
@@ -1114,8 +1126,10 @@ attribute_hidden
 void readS3VarsFromFrame(SEXP rho,
     SEXP *dotGeneric, SEXP *dotGroup, SEXP *dotClass, SEXP *dotMethod,
     SEXP *dotGenericCallEnv, SEXP *dotGenericDefEnv) {
+    if (externalWillAccessEnvVar != NULL)
+        externalWillAccessEnvVar(rho, 3);
 
-    if (TYPEOF(rho) == NILSXP ||
+   if (TYPEOF(rho) == NILSXP ||
 	rho == R_BaseNamespace || rho == R_BaseEnv || rho == R_EmptyEnv ||
 	IS_USER_DATABASE(rho) || HASHTAB(rho) != R_NilValue) goto slowpath;
 
@@ -1179,6 +1193,9 @@ slowpath:
    so the cache can be used. */
 static SEXP findGlobalVar(SEXP symbol)
 {
+    if (externalWillAccessEnvVar != NULL)
+        externalWillAccessEnvVar(R_GlobalEnv, 3);
+
     SEXP vl, rho;
     Rboolean canCache = TRUE;
     vl = R_GetGlobalCache(symbol);
@@ -1517,6 +1534,9 @@ SEXP findFun(SEXP symbol, SEXP rho)
 
 void defineVar(SEXP symbol, SEXP value, SEXP rho)
 {
+    if (externalWillAccessEnvVar != NULL)
+        externalWillAccessEnvVar(rho, 1);
+
     int hashcode;
     SEXP frame, c;
 
@@ -1527,8 +1547,6 @@ void defineVar(SEXP symbol, SEXP value, SEXP rho)
 	error(_("cannot assign values in the empty environment"));
 
     if(IS_USER_DATABASE(rho)) {
-    if (externalModifyEnvVar != NULL)
-        externalModifyEnvVar(rho, 1);
 	R_ObjectTable *table;
 	table = (R_ObjectTable *) R_ExternalPtrAddr(HASHTAB(rho));
 	if(table->assign == NULL)
@@ -1543,8 +1561,6 @@ void defineVar(SEXP symbol, SEXP value, SEXP rho)
     }
 
     if (rho == R_BaseNamespace || rho == R_BaseEnv) {
-    if (externalModifyEnvVar != NULL)
-        externalModifyEnvVar(rho, 1);
 	gsetVar(symbol, value, rho);
     } else {
 #ifdef USE_GLOBAL_CACHE
@@ -1567,14 +1583,10 @@ void defineVar(SEXP symbol, SEXP value, SEXP rho)
 	    }
 	    if (FRAME_IS_LOCKED(rho))
 		error(_("cannot add bindings to a locked environment"));
-        if (externalModifyEnvVar != NULL)
-            externalModifyEnvVar(rho, 1);
 	    SET_FRAME(rho, CONS(value, FRAME(rho)));
 	    SET_TAG(FRAME(rho), symbol);
 	}
 	else {
-        if (externalModifyEnvVar != NULL)
-            externalModifyEnvVar(rho, 1);
 	    c = PRINTNAME(symbol);
 	    if( !HASHASH(c) ) {
 		SET_HASHVALUE(c, R_Newhashpjw(CHAR(c)));
@@ -1655,8 +1667,8 @@ void addMissingVarsToNewEnv(SEXP env, SEXP addVars)
 
 static SEXP setVarInFrame(SEXP rho, SEXP symbol, SEXP value)
 {
-    if (externalModifyEnvVar != NULL)
-        externalModifyEnvVar(rho, 0);
+    if (externalWillAccessEnvVar != NULL)
+        externalWillAccessEnvVar(rho, 2);
 
     int hashcode;
     SEXP frame, c;
@@ -1752,6 +1764,9 @@ void setVar(SEXP symbol, SEXP value, SEXP rho)
 
 void gsetVar(SEXP symbol, SEXP value, SEXP rho)
 {
+    if (externalWillAccessEnvVar != NULL)
+        externalWillAccessEnvVar(R_BaseEnv, 2);
+
     if (FRAME_IS_LOCKED(rho)) {
 	if(SYMVALUE(symbol) == R_UnboundValue)
 	    error(_("cannot add binding of '%s' to the base environment"),
@@ -1848,6 +1863,9 @@ SEXP attribute_hidden do_list2env(SEXP call, SEXP op, SEXP args, SEXP rho)
 
 static int RemoveVariable(SEXP name, int hashcode, SEXP env)
 {
+    if (externalWillAccessEnvVar != NULL)
+        externalWillAccessEnvVar(env, 0);
+
     int found;
     SEXP list;
 
@@ -1859,7 +1877,7 @@ static int RemoveVariable(SEXP name, int hashcode, SEXP env)
 	error(_("cannot remove variables from the empty environment"));
     if (FRAME_IS_LOCKED(env))
 	error(_("cannot remove bindings from a locked environment"));
-
+        
     if(IS_USER_DATABASE(env)) {
 	R_ObjectTable *table;
 	table = (R_ObjectTable *) R_ExternalPtrAddr(HASHTAB(env));
@@ -2779,6 +2797,9 @@ SEXP attribute_hidden do_ls(SEXP call, SEXP op, SEXP args, SEXP rho)
    names and a boolean if sorted is desired */
 SEXP R_lsInternal3(SEXP env, Rboolean all, Rboolean sorted)
 {
+    if (externalWillAccessEnvVar != NULL)
+        externalWillAccessEnvVar(env, 3);
+
     if(IS_USER_DATABASE(env)) {
 	R_ObjectTable *tb = (R_ObjectTable*)
 	    R_ExternalPtrAddr(HASHTAB(env));
@@ -2832,6 +2853,8 @@ SEXP attribute_hidden do_env2list(SEXP call, SEXP op, SEXP args, SEXP rho)
     checkArity(op, args);
 
     env = CAR(args);
+    if (externalWillAccessEnvVar != NULL)
+        externalWillAccessEnvVar(env, 3);
     if (ISNULL(env))
 	error(_("use of NULL environment is defunct"));
     if( !isEnvironment(env) ) {
@@ -2919,6 +2942,8 @@ SEXP attribute_hidden do_eapply(SEXP call, SEXP op, SEXP args, SEXP rho)
     checkArity(op, args);
 
     PROTECT(env = eval(CAR(args), rho));
+    if (externalWillAccessEnvVar != NULL)
+        externalWillAccessEnvVar(env, 3);
     if (ISNULL(env))
 	error(_("use of NULL environment is defunct"));
     if( !isEnvironment(env) )

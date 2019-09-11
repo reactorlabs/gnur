@@ -1025,9 +1025,12 @@ void attribute_hidden PrintValueEnv(SEXP s, SEXP env)
 	   evaluating the value, which might be a call object. */
 	PROTECT(call = lang2(prinfun, xsym));
 	PROTECT(env = NewEnvironment(R_NilValue, R_NilValue, env));
+	// To prevent banned reflection errors (TODO: create a more general API to avoid "reflection" treatment of non-function envs)
+	BEGIN_TRACK_ENV(env);
 	defineVar(xsym, s, env);
 	eval(call, env);
 	defineVar(xsym, R_NilValue, env); /* to eliminate reference to s */
+	END_TRACK_ENV();
 	UNPROTECT(2);
     } else PrintValueRec(s, env);
     UNPROTECT(1);

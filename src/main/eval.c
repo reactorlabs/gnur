@@ -30,16 +30,6 @@
 #include <Fileio.h>
 #include <R_ext/Print.h>
 
-#define BEGIN_TRACK_ENV(rho)\
-	external_env_stack envStackEntry;\
-	envStackEntry.env = rho;\
-	envStackEntry.next = R_ExternalEnvStack;\
-	R_ExternalEnvStack = &envStackEntry;
-
-#define END_TRACK_ENV(env)\
-	R_ExternalEnvStack = envStackEntry.next;
-
-
 static SEXP bcEval(SEXP, SEXP, Rboolean);
 
 /* BC_PROFILING needs to be enabled at build time. It is not enabled
@@ -550,18 +540,15 @@ static external_code_to_expr externalCodeToExpr = NULL;
 external_code_read externalCodeRead = NULL;
 external_code_write externalCodeWrite = NULL;
 external_code_materialize externalMaterialize = NULL;
-external_modify_env_var externalModifyEnvVar = NULL;
-external_begin_exec_closure externalBeginExecClosure = NULL;
+external_will_access_env_var externalWillAccessEnvVar = NULL;
 struct external_env_stack *R_ExternalEnvStack = NULL;
 
 void registerExternalCode(external_code_eval eval, external_closure_call call,
                           external_code_compile compiler,
                           external_code_to_expr toExpr, external_code_read read,
                           external_code_write write,
-                          external_code_materialize materialize) {
-													external_modify_env_var modifyEnvVar,
-													external_begin_exec_closure beginExecClosure) {
->>>>>>> initial hooks to track env and closure calls
+                          external_code_materialize materialize,
+													external_will_access_env_var willAccessEnvVar) {
     externalCodeEval = eval;
     externalClosureCall = call;
     externalCodeCompile = compiler;
@@ -569,8 +556,7 @@ void registerExternalCode(external_code_eval eval, external_closure_call call,
     externalCodeRead = read;
     externalCodeWrite = write;
     externalMaterialize = materialize;
-		externalModifyEnvVar = modifyEnvVar;
-		externalBeginExecClosure = beginExecClosure;
+		externalWillAccessEnvVar = willAccessEnvVar;
 }
 
 /* Return value of "e" evaluated in "rho". */
@@ -756,8 +742,6 @@ SEXP eval(SEXP e, SEXP rho)
 	    vmaxset(vmax);
 	}
 	else if (TYPEOF(op) == BUILTINSXP) {
-		if (externalBeginExecClosure != NULL)
-			externalBeginExecClosure(e, R_BaseEnv, R_BaseEnv, R_EmptyEnv, R_NilValue, op);
 	    int save = R_PPStackTop, flag = PRIMPRINT(op);
 	    const void *vmax = vmaxget();
 	    RCNTXT cntxt;
@@ -1784,9 +1768,6 @@ SEXP applyClosure(SEXP call, SEXP op, SEXP arglist, SEXP rho, SEXP suppliedvars)
 static R_INLINE SEXP R_execClosure(SEXP call, SEXP newrho, SEXP sysparent,
                                    SEXP rho, SEXP arglist, SEXP op)
 {
-		if (externalBeginExecClosure != NULL)
-			externalBeginExecClosure(call, newrho, sysparent, rho, arglist, op);
-
     volatile SEXP body;
     RCNTXT cntxt;
     Rboolean dbg = FALSE;
@@ -2595,7 +2576,7 @@ static const char * const asym[] = {":=", "<-", "<<-", "="};
 #define NUM_ASYM (sizeof(asym) / sizeof(char *))
 static SEXP asymSymbol[NUM_ASYM];
 
-static SEXP R_ReplaceFunsTable = NULL;
+SEXP R_ReplaceFunsTable = NULL;
 static SEXP R_SubsetSym = NULL;
 static SEXP R_SubassignSym = NULL;
 static SEXP R_Subset2Sym = NULL;

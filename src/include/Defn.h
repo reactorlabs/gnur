@@ -1120,7 +1120,6 @@ SEXP R_sysframe(int,RCNTXT*);
 SEXP R_sysfunction(int,RCNTXT*);
 
 void R_run_onexits(RCNTXT *);
-void NORET R_jumpctxt(RCNTXT *, int, SEXP);
 #endif
 
 /* ../main/bind.c */

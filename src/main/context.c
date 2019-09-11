@@ -191,7 +191,6 @@ static void R_restore_globals(RCNTXT *cptr)
 	SET_PRSEEN(R_PendingPromises->promise, 2);
 	R_PendingPromises = R_PendingPromises->next;
     }
-    R_ExternalEnvStack = cptr->externalEnvStack;
     /* Need to reset R_Expressions in case we are jumping after
        handling a stack overflow. */
     R_Expressions = R_Expressions_keep;
@@ -200,6 +199,7 @@ static void R_restore_globals(RCNTXT *cptr)
     R_BCIntStackTop = cptr->intstack;
 #endif
     R_Srcref = cptr->srcref;
+    R_ExternalEnvStack = cptr->externalEnvStack;
 }
 
 static RCNTXT *first_jump_target(RCNTXT *cptr, int mask)
@@ -219,7 +219,7 @@ static RCNTXT *first_jump_target(RCNTXT *cptr, int mask)
 
 /* R_jumpctxt - jump to the named context */
 
-void attribute_hidden NORET R_jumpctxt(RCNTXT * targetcptr, int mask, SEXP val)
+void NORET R_jumpctxt(RCNTXT * targetcptr, int mask, SEXP val)
 {
     Rboolean savevis = R_Visible;
     RCNTXT *cptr;
@@ -275,7 +275,6 @@ void begincontext(RCNTXT * cptr, int flags,
     cptr->handlerstack = R_HandlerStack;
     cptr->restartstack = R_RestartStack;
     cptr->prstack = R_PendingPromises;
-    cptr->externalEnvStack = R_ExternalEnvStack;
     cptr->nodestack = R_BCNodeStackTop;
 #ifdef BC_INT_STACK
     cptr->intstack = R_BCIntStackTop;
@@ -286,6 +285,9 @@ void begincontext(RCNTXT * cptr, int flags,
     cptr->returnValue = NULL;
     cptr->jumptarget = NULL;
     cptr->jumpmask = 0;
+    cptr->rirCallFun = NULL;
+    cptr->curReflectGuard = R_GlobalContext->curReflectGuard;
+    cptr->externalEnvStack = R_ExternalEnvStack;
 
     R_GlobalContext = cptr;
 }

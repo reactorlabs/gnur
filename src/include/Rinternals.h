@@ -1589,7 +1589,6 @@ typedef struct RCNTXT {
     SEXP handlerstack;          /* condition handler stack */
     SEXP restartstack;          /* stack of available restarts */
     struct RPRSTACK *prstack;   /* stack of pending promises */
-    struct external_env_stack *externalEnvStack;
     R_bcstack_t *nodestack;
 #ifdef BC_INT_STACK
     IStackval *intstack;
@@ -1600,6 +1599,9 @@ typedef struct RCNTXT {
     SEXP returnValue;           /* only set during on.exit calls */
     struct RCNTXT *jumptarget;	/* target for a continuing jump */
     int jumpmask;               /* associated LONGJMP argument */
+    void* rirCallFun; /* RIR: RIR function which was called, or NULL if empty */
+    unsigned curReflectGuard; /* RIR: current reflect guard */
+    struct external_env_stack *externalEnvStack; /* RIR: stack of environments */
 } RCNTXT, *context;
 
 /* The Various Context Types.
@@ -1662,11 +1664,11 @@ SEXP matchArgs(SEXP, SEXP, SEXP);
 SEXP mkPROMISE(SEXP, SEXP);
 int usemethod(const char *, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP*);
 
-
 SEXP forcePromise(SEXP);
 int R_isMissing(SEXP symbol, SEXP rho);
 Rboolean R_has_methods(SEXP);
 SEXP R_possible_dispatch(SEXP, SEXP, SEXP, SEXP, Rboolean);
+void NORET R_jumpctxt(RCNTXT *, int, SEXP);
 
 
 void (SET_SPECIAL_SYMBOL)(SEXP b);
@@ -1694,6 +1696,8 @@ extern SEXP R_LoadFromFile(FILE*, int);
 extern void WriteItem(SEXP s, SEXP ref_table, R_outpstream_t stream);
 extern SEXP ReadItem(SEXP ref_table, R_inpstream_t stream);
 
+extern SEXP R_ReplaceFunsTable;
+
 typedef SEXP (*external_code_eval)(SEXP, SEXP);
 typedef SEXP (*external_closure_call)(SEXP, SEXP, SEXP, SEXP, SEXP);
 typedef SEXP (*external_code_compile)(SEXP, SEXP);
@@ -1701,20 +1705,28 @@ typedef SEXP (*external_code_to_expr)(SEXP);
 typedef void (*external_code_write)(SEXP, SEXP, R_outpstream_t);
 typedef SEXP (*external_code_read)(SEXP, R_inpstream_t);
 typedef SEXP (*external_code_materialize)(void*);
-typedef void (*external_modify_env_var)(SEXP, unsigned);
-typedef void (*external_begin_exec_closure)(SEXP, SEXP, SEXP, SEXP, SEXP, SEXP);
+typedef void (*external_will_access_env_var)(SEXP, unsigned);
+typedef void (*external_restore_context)(RCNTXT *);
 extern external_code_read externalCodeRead;
 extern external_code_write externalCodeWrite;
 extern external_code_materialize externalMaterialize;
-extern external_modify_env_var externalModifyEnvVar;
-extern external_begin_exec_closure externalBeginExecClosure;
+extern external_code_keepAlive externalKeepAlive;
+extern external_will_access_env_var externalWillAccessEnvVar;
 
 extern void registerExternalCode(external_code_eval, external_closure_call,
                                  external_code_compile, external_code_to_expr,
                                  external_code_read, external_code_write,
                                  external_code_materialize,
-                                 external_modify_env_var,
-                                 external_begin_exec_closure);
+                                 external_will_access_env_var);
+
+#define BEGIN_TRACK_ENV(rho)\
+	external_env_stack envStackEntry;\
+	envStackEntry.env = rho;\
+	envStackEntry.next = R_ExternalEnvStack;\
+	R_ExternalEnvStack = &envStackEntry;
+
+#define END_TRACK_ENV(env)\
+	R_ExternalEnvStack = envStackEntry.next;
 
 /* Defining NO_RINLINEDFUNS disables use to simulate platforms where
    this is not available */
