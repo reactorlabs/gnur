@@ -1555,6 +1555,11 @@ externRir R_bcstack_t *R_BCNodeStackBase, *R_BCNodeStackTop, *R_BCNodeStackEnd;
 externRir IStackval *R_BCIntStackBase, *R_BCIntStackTop, *R_BCIntStackEnd;
 #endif
 
+/* Stack entry for pending promises */
+typedef struct RPRSTACK {
+    SEXP promise;
+    struct RPRSTACK *next;
+} RPRSTACK;
 
 #include <setjmp.h>
 # define SIGJMP_BUF sigjmp_buf
@@ -1601,6 +1606,7 @@ typedef struct RCNTXT {
     int jumpmask;               /* associated LONGJMP argument */
     void* rirCallFun; /* RIR: RIR function which was called, or NULL if empty */
     unsigned curReflectGuard; /* RIR: current reflect guard */
+    unsigned char isFreezeFunCtx; /* RIR: This is the context of the rir.freeze closure */
     struct external_env_stack *externalEnvStack; /* RIR: stack of environments */
 } RCNTXT, *context;
 

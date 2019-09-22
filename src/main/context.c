@@ -287,6 +287,7 @@ void begincontext(RCNTXT * cptr, int flags,
     cptr->jumpmask = 0;
     cptr->rirCallFun = NULL;
     cptr->curReflectGuard = R_GlobalContext->curReflectGuard;
+    cptr->isFreezeFunCtx = 0;
     cptr->externalEnvStack = R_ExternalEnvStack;
 
     R_GlobalContext = cptr;

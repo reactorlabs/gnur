@@ -751,14 +751,14 @@ SEXP eval(SEXP e, SEXP rho)
 	       but helps for tracebacks on .C etc. */
 	    if (R_Profiling || (PPINFO(op).kind == PP_FOREIGN)) {
 		SEXP oldref = R_Srcref;
+		BEGIN_TRACK_ENV(rho);
 		begincontext(&cntxt, CTXT_BUILTIN, e,
 			     R_BaseEnv, R_BaseEnv, R_NilValue, R_NilValue);
 		R_Srcref = NULL;
-		BEGIN_TRACK_ENV(rho);
 		tmp = PRIMFUN(op) (e, op, tmp, rho);
-		END_TRACK_ENV();
 		R_Srcref = oldref;
 		endcontext(&cntxt);
+		END_TRACK_ENV();
 	    } else {
 		tmp = PRIMFUN(op) (e, op, tmp, rho);
 	    }
@@ -1772,6 +1772,7 @@ static R_INLINE SEXP R_execClosure(SEXP call, SEXP newrho, SEXP sysparent,
     RCNTXT cntxt;
     Rboolean dbg = FALSE;
 
+  	BEGIN_TRACK_ENV(newrho);
     begincontext(&cntxt, CTXT_RETURN, call, newrho, sysparent, arglist, op);
 
     body = BODY(op);
@@ -1810,8 +1811,6 @@ static R_INLINE SEXP R_execClosure(SEXP call, SEXP newrho, SEXP sysparent,
     /*  Set a longjmp target which will catch any explicit returns
 	from the function body.  */
 
-	BEGIN_TRACK_ENV(newrho);
-
     if ((SETJMP(cntxt.cjmpbuf))) {
 	if (!cntxt.jumptarget) {
 	    /* ignores intermediate jumps for on.exits */
@@ -1829,10 +1828,10 @@ static R_INLINE SEXP R_execClosure(SEXP call, SEXP newrho, SEXP sysparent,
 	/* make it available to on.exit and implicitly protect */
 	cntxt.returnValue = eval(body, newrho);
 
-	END_TRACK_ENV();
 
     R_Srcref = cntxt.srcref;
     endcontext(&cntxt);
+  	END_TRACK_ENV();
 
     if (dbg) {
 	Rprintf("exiting from: ");

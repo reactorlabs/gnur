@@ -474,11 +474,6 @@ Rboolean (BASE_SYM_CACHED)(SEXP b);
 #endif /* USE_RINTERNALS */
 
 #ifdef R_USE_SIGNALS
-/* Stack entry for pending promises */
-typedef struct RPRSTACK {
-    SEXP promise;
-    struct RPRSTACK *next;
-} RPRSTACK;
 
 #define IS_RESTART_BIT_SET(flags) ((flags) & CTXT_RESTART)
 #define SET_RESTART_BIT_ON(flags) (flags |= CTXT_RESTART)
