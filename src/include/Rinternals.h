@@ -1710,13 +1710,12 @@ typedef SEXP (*external_code_compile)(SEXP, SEXP);
 typedef SEXP (*external_code_to_expr)(SEXP);
 typedef void (*external_code_write)(SEXP, SEXP, R_outpstream_t);
 typedef SEXP (*external_code_read)(SEXP, R_inpstream_t);
-typedef SEXP (*external_code_materialize)(void*);
+typedef SEXP (*external_code_materialize)(SEXP);
 typedef void (*external_will_access_env_var)(SEXP, unsigned);
 typedef void (*external_restore_context)(RCNTXT *);
 extern external_code_read externalCodeRead;
 extern external_code_write externalCodeWrite;
 extern external_code_materialize externalMaterialize;
-extern external_code_keepAlive externalKeepAlive;
 extern external_will_access_env_var externalWillAccessEnvVar;
 
 extern void registerExternalCode(external_code_eval, external_closure_call,
