@@ -119,8 +119,8 @@ void materializeIfLazy(SEXP s){
             while (cur) {
                 if (cur->promargs == s)
                     cur->promargs = mat;
+                cur = cur->nextcontext;
             }
-            cur = cur->nextcontext;
         }
     }
 }
