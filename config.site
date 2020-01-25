@@ -1,4 +1,4 @@
-#! /bin/sh
+#! /bin/bash
 
 if [[ "$OSTYPE" == "darwin"* ]]; then
   if [ $MACOS_GCC9 -eq 1 ]; then
