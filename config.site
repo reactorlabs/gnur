@@ -6,8 +6,8 @@ if [[ "$OSTYPE" == "darwin"* ]]; then
     CXX_CMD="/usr/local/bin/g++-9"
     LD_EXTRA="/usr/local/Cellar/gcc/9.2.0_3/"
   else
-    CC_CMD="/usr/local/bin/gcc-9"
-    CXX_CMD="/usr/local/bin/g++-9"
+    CC_CMD="/usr/bin/clang"
+    CXX_CMD="/usr/bin/clang++"
     LD_EXTRA="/usr/lib/"
   fi
   CC="$CC_CMD -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk"
