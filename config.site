@@ -1,5 +1,26 @@
 #! /bin/sh
 
+if [[ "$OSTYPE" == "darwin"* ]]; then
+  if [ $MACOS_GCC9 -eq 1 ]; then
+    CC_CMD="/usr/local/bin/gcc-9"
+    CXX_CMD="/usr/local/bin/g++-9"
+    LD_EXTRA="/usr/local/Cellar/gcc/9.2.0_3/"
+  else
+    CC_CMD="/usr/local/bin/gcc-9"
+    CXX_CMD="/usr/local/bin/g++-9"
+    LD_EXTRA="/usr/lib/"
+  fi
+  CC="$CC_CMD -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk"
+  CXX="$CXX_CMD -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk"
+  OBJC=$CC
+  F77="/usr/local/gfortran/bin/gfortran -arch x86_64"
+  FC="/usr/local/gfortran/bin/gfortran  -arch x86_64"
+  LDFLAGS="-L$LD_EXTRA -L/usr/local/lib"
+  R_LD_LIBRARY_PATH=/usr/lib:/usr/local/lib
+fi
+CXXFLAGS="-g3 -O2"
+CFLAGS="-g3 -O2"
+
 ### This file is part of R.
 ###
 ### R is free software; you can redistribute it and/or modify it under
