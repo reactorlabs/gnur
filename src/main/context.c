@@ -114,18 +114,13 @@
 void materializeIfLazy(SEXP s){
     if (TYPEOF(s) == EXTERNALSXP) {
         SEXP mat = externalMaterialize((void*)s);
-        RCNTXT* cur = R_GlobalContext;
-        while (cur) {
-            if (TYPEOF(mat) == ENVSXP) {
-                if (cur->cloenv == s)
-                    cur->cloenv = mat;
-                if (cur->sysparent == s)
-                    cur->sysparent = mat;
-            } else if (TYPEOF(mat) == LISTSXP) {
+        if (TYPEOF(mat) == LISTSXP) {
+            RCNTXT* cur = R_GlobalContext;
+            while (cur) {
                 if (cur->promargs == s)
                     cur->promargs = mat;
+                cur = cur->nextcontext;
             }
-            cur = cur->nextcontext;
         }
     }
 }
