@@ -91,6 +91,7 @@ INLINE_FUN void CHKVEC(SEXP x) {
     case EXPRSXP:
     case RAWSXP:
     case WEAKREFSXP:
+    case EXTERNALSXP:
 	break;
     default:
 	error("cannot get data pointer of '%s' objects", type2char(TYPEOF(x)));
