@@ -1831,7 +1831,6 @@ BUI   0 0 0 0 0 0 0 1 = 64
 
 
 externRir SEXP	R_ReturnedValue;    /* Slot for return-ing values */
-externRir RCNTXT* R_GlobalContext;    /* The global context */
 
 # define begincontext		Rf_begincontext
 # define ddfindVar		Rf_ddfindVar
