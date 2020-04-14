@@ -79,10 +79,8 @@ void NORET jump_to_toplevel(void);
 void mainloop(void);
 void onintr(void);
 void onintrNoResume(void);
-#ifndef DEFN_H_
 #ifndef R_INTERNALS_H_
 extern void* R_GlobalContext;    /* Need opaque pointer type for export */
-#endif
 #endif
 
 void process_site_Renviron(void);

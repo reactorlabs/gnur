@@ -589,6 +589,7 @@ extern0 SEXP*	R_SymbolTable;	    /* The symbol table */
 #ifdef R_USE_SIGNALS
 extern0 RCNTXT R_Toplevel;	      /* Storage for the toplevel context */
 extern0 RCNTXT* R_ToplevelContext;  /* The toplevel context */
+LibExtern RCNTXT* R_GlobalContext;    /* The global context */
 extern0 RCNTXT* R_SessionContext;   /* The session toplevel context */
 extern0 RCNTXT* R_ExitContext;      /* The active context for on.exit processing */
 #endif
