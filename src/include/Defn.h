@@ -1316,7 +1316,7 @@ extern const char *locale2charset(const char *);
 } while(0)
 
 // Helpers needed to interact with RIR
-void materializeIfLazy(SEXP ctx);
+SEXP materializeIfLazy(SEXP ctx);
 uint32_t traceableSEXPs(SEXP s);
 
 /*
