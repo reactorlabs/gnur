@@ -3180,7 +3180,7 @@ static SEXP pos2env(int pos, SEXP call)
 	if (pos != 1)
 	    errorcall(call, _("invalid '%s' argument"), "pos");
     }
-    return env;
+    return materializeIfLazy(env);
 }
 
 /* this is primitive */

@@ -111,9 +111,10 @@
 #include <Defn.h>
 #include <Internal.h>
 
-void materializeIfLazy(SEXP s){
+SEXP materializeIfLazy(SEXP s){
+    SEXP mat = s;
     if (TYPEOF(s) == EXTERNALSXP) {
-        SEXP mat = externalMaterialize((void*)s);
+        mat = externalMaterialize((void*)s);
         if (TYPEOF(mat) == LISTSXP) {
             RCNTXT* cur = R_GlobalContext;
             while (cur) {
@@ -123,6 +124,7 @@ void materializeIfLazy(SEXP s){
             }
         }
     }
+    return mat;
 }
 
 /* R_run_onexits - runs the conexit/cend code for all contexts from
@@ -729,7 +731,7 @@ SEXP attribute_hidden do_parentframe(SEXP call, SEXP op, SEXP args, SEXP rho)
     RCNTXT *cptr = R_findParentContext(R_GlobalContext, n);
 
     if (cptr)
-	return cptr->sysparent;
+	return materializeIfLazy(cptr->sysparent);
     else
 	return R_GlobalEnv;
 }
