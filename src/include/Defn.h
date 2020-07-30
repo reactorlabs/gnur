@@ -403,7 +403,7 @@ typedef struct {
 
 /* Promise Access Macros */
 #define PRCODE(x)	((x)->u.promsxp.expr)
-#define PRENV(x)	((x)->u.promsxp.env)
+#define PRENV(x)	(materializeIfLazy((x)->u.promsxp.env))
 #define PRVALUE(x)	((x)->u.promsxp.value)
 #define PRSEEN(x)	((x)->sxpinfo.gp)
 #define SET_PRSEEN(x,v)	(((x)->sxpinfo.gp)=(v))
