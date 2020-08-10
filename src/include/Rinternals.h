@@ -1733,6 +1733,7 @@ extern SEXP ReadItem(SEXP ref_table, R_inpstream_t stream);
 
 typedef SEXP (*external_code_eval)(SEXP, SEXP);
 typedef SEXP (*external_closure_call)(SEXP, SEXP, SEXP, SEXP, SEXP);
+typedef SEXP (*external_promise_eval)(SEXP);
 typedef SEXP (*external_code_compile)(SEXP, SEXP);
 typedef SEXP (*external_code_to_expr)(SEXP);
 typedef void (*external_code_write)(SEXP, SEXP, R_outpstream_t);
@@ -1742,9 +1743,9 @@ extern external_code_read externalCodeRead;
 extern external_code_write externalCodeWrite;
 extern external_code_materialize externalMaterialize;
 extern void registerExternalCode(external_code_eval, external_closure_call,
-                                 external_code_compile, external_code_to_expr,
-                                 external_code_read, external_code_write,
-                                 external_code_materialize);
+                                 external_promise_eval, external_code_compile,
+                                 external_code_to_expr, external_code_read,
+                                 external_code_write, external_code_materialize);
 
 /* Defining NO_RINLINEDFUNS disables use to simulate platforms where
    this is not available */

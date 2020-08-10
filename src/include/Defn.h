@@ -611,7 +611,7 @@ extern uintptr_t R_CStackStart	INI_as((uintptr_t)-1);	/* Initial stack address *
 extern int	R_CStackDir	INI_as(1);	/* C stack direction */
 
 #ifdef R_USE_SIGNALS
-extern0 struct RPRSTACK *R_PendingPromises INI_as(NULL); /* Pending promise stack */
+extern struct RPRSTACK *R_PendingPromises INI_as(NULL); /* Pending promise stack */
 #endif
 
 /* File Input/Output */
