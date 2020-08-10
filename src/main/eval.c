@@ -31,6 +31,32 @@
 #include <R_ext/Print.h>
 
 
+static external_code_eval externalCodeEval = NULL;
+static external_closure_call externalClosureCall = NULL;
+static external_promise_eval externalPromiseEval = NULL;
+static external_code_compile externalCodeCompile = NULL;
+static external_code_to_expr externalCodeToExpr = NULL;
+external_code_read externalCodeRead = NULL;
+external_code_write externalCodeWrite = NULL;
+external_code_materialize externalMaterialize = NULL;
+
+void registerExternalCode(external_code_eval eval, external_closure_call call,
+                          external_promise_eval prom,
+                          external_code_compile compiler,
+                          external_code_to_expr toExpr, external_code_read read,
+                          external_code_write write,
+                          external_code_materialize materialize) {
+    externalCodeEval = eval;
+    externalClosureCall = call;
+    externalPromiseEval = prom;
+    externalCodeCompile = compiler;
+    externalCodeToExpr = toExpr;
+    externalCodeRead = read;
+    externalCodeWrite = write;
+    externalMaterialize = materialize;
+}
+
+
 static SEXP bcEval(SEXP, SEXP, Rboolean);
 
 /* BC_PROFILING needs to be enabled at build time. It is not enabled
@@ -532,6 +558,9 @@ void attribute_hidden check_stack_balance(SEXP op, int save)
 
 SEXP forcePromise(SEXP e)
 {
+    if (PRVALUE(e) == R_UnboundValue && TYPEOF(PRCODE(e)) == EXTERNALSXP)
+        return externalPromiseEval(e);
+
     if (PRVALUE(e) == R_UnboundValue) {
 	RPRSTACK prstack;
 	SEXP val;
@@ -635,30 +664,6 @@ void attribute_hidden R_BCProtReset(R_bcstack_t *ptop)
 	if (R_BCProtTop > ibcl_oldptop)			\
 	    DECLNK_stack(ibcl_oldptop);			\
     } while (0)
-
-static external_code_eval externalCodeEval = NULL;
-static external_closure_call externalClosureCall = NULL;
-static external_code_compile externalCodeCompile = NULL;
-static external_code_to_expr externalCodeToExpr = NULL;
-external_code_read externalCodeRead = NULL;
-external_code_write externalCodeWrite = NULL;
-external_code_materialize externalMaterialize = NULL;
-
-void registerExternalCode(external_code_eval eval,
-                          external_closure_call call,
-                          external_code_compile compiler,
-                          external_code_to_expr toExpr, external_code_read read,
-                          external_code_write write,
-                          external_code_materialize materialize) {
-    externalCodeEval = eval;
-    externalClosureCall = call;
-    externalCodeCompile = compiler;
-    externalCodeToExpr = toExpr;
-    externalCodeRead = read;
-    externalCodeWrite = write;
-    externalMaterialize = materialize;
-}
-
 
 /* Return value of "e" evaluated in "rho". */
 
