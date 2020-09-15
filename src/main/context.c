@@ -115,7 +115,7 @@ SEXP materializeIfLazy(SEXP s){
     SEXP mat = s;
     if (TYPEOF(s) == EXTERNALSXP) {
         mat = externalMaterialize((void*)s);
-        if (TYPEOF(mat) == LISTSXP) {
+        if (TYPEOF(mat) == NILSXP || TYPEOF(mat) == LISTSXP) {
             RCNTXT* cur = R_GlobalContext;
             while (cur) {
                 if (cur->promargs == s)
