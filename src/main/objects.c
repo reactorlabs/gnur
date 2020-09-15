@@ -39,11 +39,11 @@ static SEXP GetObject(RCNTXT *cptr)
     if (TYPEOF(b) != CLOSXP) error(_("generic 'function' is not a function"));
     formals = FORMALS(b);
 
+    materializeIfLazy(cptr->promargs);
     tag = TAG(formals);
     if (tag != R_NilValue && tag != R_DotsSymbol) {
 	s = NULL;
 	/** exact matches **/
-	materializeIfLazy(cptr->promargs);
 	for (b = cptr->promargs ; b != R_NilValue ; b = CDR(b))
 	    if (TAG(b) != R_NilValue && pmatch(tag, TAG(b), 1)) {
 		if (s != NULL)
