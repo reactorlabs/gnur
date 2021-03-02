@@ -42237,12 +42237,16 @@ else
   cat confdefs.h - <<_ACEOF >conftest.$ac_ext
 /* end confdefs.h.  */
 
+
 #ifdef HAVE_BZLIB_H
+#include <stdlib.h> // for exit
+#include <string.h> // for strcmp
 #include <bzlib.h>
 #endif
 int main() {
     char *ver = BZ2_bzlibVersion();
     exit(strcmp(ver, "1.0.6") < 0);
+
 }
 
 _ACEOF
@@ -42946,6 +42950,7 @@ else
   cat confdefs.h - <<_ACEOF >conftest.$ac_ext
 /* end confdefs.h.  */
 
+#include <stdlib.h> // for exit
 #include <string.h>
 #include <curl/curl.h>
 int main()
