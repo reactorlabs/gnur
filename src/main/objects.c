@@ -535,6 +535,7 @@ SEXP attribute_hidden NORET do_usemethod(SEXP call, SEXP op, SEXP args, SEXP env
     cptr = R_GlobalContext;
     if ( !(cptr->callflag & CTXT_FUNCTION) || cptr->cloenv != env)
 	errorcall(call, _("'UseMethod' used in an inappropriate fashion"));
+    materializeIfLazy(cptr->sysparent);
     callenv = cptr->sysparent;
     /* We need to find the generic to find out where it is defined.
        This is set up to avoid getting caught by things like
