@@ -1006,7 +1006,7 @@ static void TryToReleasePages(void)
 
 	    maxrel = R_GenHeap[i].AllocCount;
 	    for (gen = 0; gen < NUM_OLD_GENERATIONS; gen++)
-		maxrel -= (int)((1.0 + R_MaxKeepFrac) * 
+		maxrel -= (int)((1.0 + R_MaxKeepFrac) *
 				R_GenHeap[i].OldCount[gen]);
 	    maxrel_pages = maxrel > 0 ? maxrel / page_count : 0;
 
@@ -2494,6 +2494,11 @@ SEXP NewEnvironment(SEXP namelist, SEXP valuelist, SEXP rho)
     return (newrho);
 }
 
+
+
+int CREATED_PROMISES= 0;
+
+
 /* mkPROMISE is defined directly do avoid the need to protect its arguments
    unless a GC will actually occur. */
 SEXP mkPROMISE(SEXP expr, SEXP rho)
@@ -2529,8 +2534,12 @@ SEXP mkPROMISE(SEXP expr, SEXP rho)
     PRVALUE(s) = R_UnboundValue;
     PRSEEN(s) = 0;
     ATTRIB(s) = R_NilValue;
+
+    CREATED_PROMISES++;
     return s;
 }
+
+
 
 SEXP R_mkEVPROMISE(SEXP expr, SEXP val)
 {
@@ -3051,7 +3060,7 @@ void attribute_hidden R_check_thread(const char *s)
     }
 }
 # else
-/* This could be implemented for Windows using their threading API */ 
+/* This could be implemented for Windows using their threading API */
 void attribute_hidden R_check_thread(const char *s) {}
 # endif
 #endif
