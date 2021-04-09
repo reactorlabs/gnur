@@ -111,20 +111,8 @@
 #include <Defn.h>
 #include <Internal.h>
 
-SEXP materializeIfLazy(SEXP s){
-    SEXP mat = s;
-    if (TYPEOF(s) == EXTERNALSXP) {
-        mat = externalMaterialize((void*)s);
-        if (TYPEOF(mat) == NILSXP || TYPEOF(mat) == LISTSXP) {
-            RCNTXT* cur = R_GlobalContext;
-            while (cur) {
-                if (cur->promargs == s)
-                    cur->promargs = mat;
-                cur = cur->nextcontext;
-            }
-        }
-    }
-    return mat;
+SEXP materializeIfLazy(SEXP s) {
+    return (TYPEOF(s) == EXTERNALSXP) ? externalMaterialize(s) : s;
 }
 
 /* R_run_onexits - runs the conexit/cend code for all contexts from
