@@ -1095,6 +1095,9 @@ static R_INLINE Rboolean R_CheckJIT(SEXP fun)
             (externalCodeToExpr && TYPEOF(body) != EXTERNALSXP)) &&
 	    ! R_disable_bytecode && ! NOJIT(fun)) {
 
+
+
+
 	if (MAYBEJIT(fun)) {
 	    /* function marked as MAYBEJIT the first time now seen
 	       twice, so go ahead and compile */
@@ -1108,16 +1111,20 @@ static R_INLINE Rboolean R_CheckJIT(SEXP fun)
 
 	int score = JIT_score(body);
 	if (jit_strategy == STRATEGY_ALL_SMALL_MAYBE)
-	    if (score < MIN_JIT_SCORE) { SET_MAYBEJIT(fun); return FALSE; }
+	    if (score < MIN_JIT_SCORE) {
+			return TRUE;
+			//SET_MAYBEJIT(fun);  ****
+			//return FALSE;   ****
+		}
 
 	if (CLOENV(fun) == R_GlobalEnv) {
 	    /* top level functions are only compiled if score is high enough */
 	    if (score < MIN_JIT_SCORE) {
-		if (jit_strategy == STRATEGY_TOP_SMALL_MAYBE)
-		    SET_MAYBEJIT(fun);
-		else
-		    SET_NOJIT(fun);
-		return FALSE;
+			if (jit_strategy == STRATEGY_TOP_SMALL_MAYBE)
+				return TRUE; //SET_MAYBEJIT(fun);  ********
+			else
+				return TRUE; //SET_NOJIT(fun); ******
+			return FALSE;
 	    }
 	    else return TRUE;
 	}
@@ -1125,12 +1132,14 @@ static R_INLINE Rboolean R_CheckJIT(SEXP fun)
 	    /* only compile non-top-level function if score is high
 	       enough and seen twice */
 	    if (score < MIN_JIT_SCORE) {
-		SET_NOJIT(fun);
-		return FALSE;
+			//return TRUE;   ***** THIS ONE TRIGGERS ERROR  ops.numeric_version
+			SET_NOJIT(fun);
+			return FALSE;
 	    }
 	    else {
-		SET_MAYBEJIT(fun);
-		return FALSE;
+			return TRUE;
+			//SET_MAYBEJIT(fun);  ****
+			//return FALSE;  ****
 	    }
 	}
     }
@@ -5000,7 +5009,7 @@ static R_INLINE SEXP FIND_VAR_NO_CACHE(SEXP symbol, SEXP rho, SEXP cell,
 	SEXP value = R_GetVarLocValue(loc);
 	DECLNK_stack(stack_base, R_BCNodeStackTop);
 	return value;
-    }	
+    }
     else return R_GetVarLocValue(loc);
 }
 
