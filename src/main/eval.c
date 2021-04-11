@@ -1072,6 +1072,7 @@ static int jit_strategy = -1;
 
 static R_INLINE Rboolean R_CheckJIT(SEXP fun)
 {
+
     /* to help with testing */
     if (jit_strategy < 0) {
 	int dflt = R_jit_enabled == 1 ?
@@ -1097,7 +1098,8 @@ static R_INLINE Rboolean R_CheckJIT(SEXP fun)
             (externalCodeToExpr && TYPEOF(body) != EXTERNALSXP)) &&
 	    ! R_disable_bytecode && ! NOJIT(fun)) {
 
-
+	char* s = getenv("INLINE_ALL_PROMS");
+	int INLINEPROMS = (s != NULL && (*s == '1'));
 
 
 	if (MAYBEJIT(fun)) {
@@ -1114,18 +1116,25 @@ static R_INLINE Rboolean R_CheckJIT(SEXP fun)
 	int score = JIT_score(body);
 	if (jit_strategy == STRATEGY_ALL_SMALL_MAYBE)
 	    if (score < MIN_JIT_SCORE) {
-			return TRUE;
-			//SET_MAYBEJIT(fun);  ****
-			//return FALSE;   ****
+			if (INLINEPROMS)
+				return TRUE;
+			SET_MAYBEJIT(fun); // ****
+			return FALSE;   //****
 		}
 
 	if (CLOENV(fun) == R_GlobalEnv) {
 	    /* top level functions are only compiled if score is high enough */
 	    if (score < MIN_JIT_SCORE) {
-			if (jit_strategy == STRATEGY_TOP_SMALL_MAYBE)
-				return TRUE; //SET_MAYBEJIT(fun);  ********
-			else
-				return TRUE; //SET_NOJIT(fun); ******
+			if (jit_strategy == STRATEGY_TOP_SMALL_MAYBE) {
+				if (INLINEPROMS)
+					return TRUE;
+				SET_MAYBEJIT(fun);  //********
+			}
+			else {
+				if (INLINEPROMS)
+					return TRUE;
+				SET_NOJIT(fun); //******
+			}
 			return FALSE;
 	    }
 	    else return TRUE;
@@ -1139,9 +1148,10 @@ static R_INLINE Rboolean R_CheckJIT(SEXP fun)
 			return FALSE;
 	    }
 	    else {
-			return TRUE;
-			//SET_MAYBEJIT(fun);  ****
-			//return FALSE;  ****
+			if (INLINEPROMS)
+				return TRUE;
+			SET_MAYBEJIT(fun); // ****
+			return FALSE; // ****
 	    }
 	}
     }
