@@ -31,6 +31,8 @@
 #include <R_ext/Print.h>
 
 
+int CREATED_PROMISES_AST = 0;
+
 static external_code_eval externalCodeEval = NULL;
 static external_closure_call externalClosureCall = NULL;
 static external_promise_eval externalPromiseEval = NULL;
@@ -1734,6 +1736,7 @@ SEXP applyClosure(SEXP call, SEXP op, SEXP arglist, SEXP rho, SEXP suppliedvars)
     a = actuals;
     while (f != R_NilValue) {
 	if (CAR(a) == R_MissingArg && CAR(f) != R_MissingArg) {
+		CREATED_PROMISES_AST++;
 	    SETCAR(a, mkPROMISE(CAR(f), newrho));
 	    SET_MISSING(a, 2);
 	}
@@ -2653,6 +2656,7 @@ static R_INLINE SEXP getAssignFcnSymbol(SEXP fun)
 
 static R_INLINE SEXP mkRHSPROMISE(SEXP expr, SEXP rhs)
 {
+	CREATED_PROMISES_AST++;
     return R_mkEVPROMISE_NR(expr, rhs);
 }
 
@@ -3093,8 +3097,9 @@ SEXP attribute_hidden promiseArgs(SEXP el, SEXP rho)
 		while (h != R_NilValue) {
 		    if (TYPEOF(CAR(h)) == PROMSXP || CAR(h) == R_MissingArg)
 		      SETCDR(tail, CONS(CAR(h), R_NilValue));
-                    else
-		      SETCDR(tail, CONS(mkPROMISE(CAR(h), rho), R_NilValue));
+                    else {
+			  CREATED_PROMISES_AST++;
+		      SETCDR(tail, CONS(mkPROMISE(CAR(h), rho), R_NilValue)); }
 		    tail = CDR(tail);
 		    COPY_TAG(tail, h);
 		    h = CDR(h);
@@ -3110,6 +3115,7 @@ SEXP attribute_hidden promiseArgs(SEXP el, SEXP rho)
 	    COPY_TAG(tail, el);
 	}
 	else {
+		CREATED_PROMISES_AST++;
 	    SETCDR(tail, CONS(mkPROMISE(CAR(el), rho), R_NilValue));
 	    tail = CDR(tail);
 	    COPY_TAG(tail, el);
@@ -5000,7 +5006,7 @@ static R_INLINE SEXP FIND_VAR_NO_CACHE(SEXP symbol, SEXP rho, SEXP cell,
 	SEXP value = R_GetVarLocValue(loc);
 	DECLNK_stack(stack_base, R_BCNodeStackTop);
 	return value;
-    }	
+    }
     else return R_GetVarLocValue(loc);
 }
 
@@ -6708,8 +6714,10 @@ static SEXP bcEval(SEXP body, SEXP rho, Rboolean useCache)
 	      /* uncommon but possible, the compiler may decide not to compile
 	         an argument expression */
 	      value = eval(code, rho);
-	  } else
+	  } else {
+		CREATED_PROMISES_AST++;
 	    value = mkPROMISE(code, rho);
+	  }
 	  PUSHCALLARG(value);
 	}
 	NEXT();
@@ -6744,8 +6752,10 @@ static SEXP bcEval(SEXP body, SEXP rho, Rboolean useCache)
 	        val = eval(CAR(h), rho);
 	      else if (TYPEOF(CAR(h)) == PROMSXP || CAR(h) == R_MissingArg)
 	        val = CAR(h);
-	      else
+	      else {
+			CREATED_PROMISES_AST++;
 	        val = mkPROMISE(CAR(h), rho);
+		  }
 	      PUSHCALLARG(val);
 	      SETCALLARG_TAG(TAG(h));
 	    }
@@ -7156,6 +7166,7 @@ static SEXP bcEval(SEXP body, SEXP rho, Rboolean useCache)
 	  PROTECT(args = duplicate(CDR(call)));
 	  /* insert evaluated promise for LHS as first argument */
 	  /* promise won't be captured so don't track references */
+	  CREATED_PROMISES_AST++;
 	  prom = R_mkEVPROMISE_NR(R_TmpvalSymbol, lhs);
 	  SETCAR(args, prom);
 	  /* insert evaluated promise for RHS as last argument */
@@ -7176,6 +7187,7 @@ static SEXP bcEval(SEXP body, SEXP rho, Rboolean useCache)
 	  /* replace first argument with evaluated promise for LHS */
 	  /* promise might be captured, so track references */
 	  args = CLOSURE_CALL_FRAME_ARGS();
+	  CREATED_PROMISES_AST++;
 	  prom = R_mkEVPROMISE(R_TmpvalSymbol, lhs);
 	  SETCAR(args, prom);
 	  /* make the call */
@@ -7211,6 +7223,7 @@ static SEXP bcEval(SEXP body, SEXP rho, Rboolean useCache)
 	  SETSTACK(-2, args);
 	  /* insert evaluated promise for LHS as first argument */
 	  /* promise won't be captured so don't track refrences */
+	  CREATED_PROMISES_AST++;
 	  prom = R_mkEVPROMISE_NR(R_TmpvalSymbol, lhs);
 	  SETCAR(args, prom);
 	  /* make the call */
@@ -7220,6 +7233,7 @@ static SEXP bcEval(SEXP body, SEXP rho, Rboolean useCache)
 	  /* replace first argument with evaluated promise for LHS */
 	  /* promise might be captured, so track references */
 	  args = CLOSURE_CALL_FRAME_ARGS();
+	  CREATED_PROMISES_AST++;
 	  prom = R_mkEVPROMISE(R_TmpvalSymbol, lhs);
 	  SETCAR(args, prom);
 	  /* make the call */
