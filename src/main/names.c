@@ -80,11 +80,21 @@
  *
  */
 
+extern int CREATED_PROMISES;
+
+
+SEXP do_resetCreatedPromises() {  CREATED_PROMISES =0;  return R_NilValue; }
+SEXP do_createdPromises() { return Rf_ScalarInteger(CREATED_PROMISES); }
+
+
 FUNTAB R_FunTab[] =
 {
 
 /* printname	c-entry		offset	eval	arity	pp-kind	     precedence	rightassoc
  * ---------	-------		------	----	-----	-------      ----------	----------*/
+
+{"createdPromises",		do_createdPromises,		0,	11,	1,	{PP_FUNCALL, PREC_FN,	0}},
+{"resetCreatedPromises",		do_resetCreatedPromises,		0,	11,	1,	{PP_FUNCALL, PREC_FN,	0}},
 
 /* Language Related Constructs */
 
