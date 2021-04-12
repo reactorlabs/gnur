@@ -93,8 +93,6 @@ FUNTAB R_FunTab[] =
 /* printname	c-entry		offset	eval	arity	pp-kind	     precedence	rightassoc
  * ---------	-------		------	----	-----	-------      ----------	----------*/
 
-{"createdPromises",		do_createdPromises,		0,	11,	1,	{PP_FUNCALL, PREC_FN,	0}},
-{"resetCreatedPromises",		do_resetCreatedPromises,		0,	11,	1,	{PP_FUNCALL, PREC_FN,	0}},
 
 /* Language Related Constructs */
 
@@ -996,6 +994,10 @@ FUNTAB R_FunTab[] =
 {"curlVersion", do_curlVersion, 0,	11,	0,	{PP_FUNCALL, PREC_FN,	0}},
 {"curlGetHeaders",do_curlGetHeaders,0,	11,	3,	{PP_FUNCALL, PREC_FN,	0}},
 {"curlDownload",do_curlDownload, 0,	11,	6,	{PP_FUNCALL, PREC_FN,	0}},
+
+ {"createdPromises",		do_createdPromises,		0,	11,	1,	{PP_FUNCALL, PREC_FN,	0}},
+ {"resetCreatedPromises",		do_resetCreatedPromises,		0,	11,	1,	{PP_FUNCALL, PREC_FN,	0}},
+
 
 {NULL,		NULL,		0,	0,	0,	{PP_INVALID, PREC_FN,	0}},
 };
