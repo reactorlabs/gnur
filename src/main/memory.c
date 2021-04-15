@@ -90,6 +90,7 @@
 #include <R_ext/Rallocators.h> /* for R_allocator_t structure */
 #include <Rmath.h> // R_pow_di
 #include <Print.h> // R_print
+#include <time.h>
 
 #if defined(Win32)
 extern void *Rm_malloc(size_t n);
@@ -2497,12 +2498,21 @@ SEXP NewEnvironment(SEXP namelist, SEXP valuelist, SEXP rho)
 
 
 int CREATED_PROMISES= 0;
+double MKPROMISE_TIME = 0;
 
 
 /* mkPROMISE is defined directly do avoid the need to protect its arguments
    unless a GC will actually occur. */
 SEXP mkPROMISE(SEXP expr, SEXP rho)
 {
+
+
+     clock_t start, end;
+     double cpu_time_used;
+
+     start = clock();
+
+
     SEXP s;
     if (FORCE_GC || NO_FREE_NODES()) {
 	PROTECT(expr);
@@ -2534,6 +2544,12 @@ SEXP mkPROMISE(SEXP expr, SEXP rho)
     PRVALUE(s) = R_UnboundValue;
     PRSEEN(s) = 0;
     ATTRIB(s) = R_NilValue;
+
+
+
+    end = clock();
+    cpu_time_used = ((double) (end - start)) / CLOCKS_PER_SEC;
+    MKPROMISE_TIME +=cpu_time_used;
 
     CREATED_PROMISES++;
     return s;
