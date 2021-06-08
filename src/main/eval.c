@@ -1090,6 +1090,12 @@ static R_INLINE Rboolean R_CheckJIT(SEXP fun)
 
     SEXP body = BODY(fun);
 
+	// If RIR compilation is enabled, consider the AST instead of the
+	// bytecode in objects precompiled as BCODESXP.
+	if (externalCodeToExpr && (TYPEOF(body) == BCODESXP)) {
+		body = VECTOR_ELT(CDR(body), 0);
+	}
+
     if (R_jit_enabled > 0 &&
         ((!externalCodeToExpr && TYPEOF(body) != BCODESXP) ||
             (externalCodeToExpr && TYPEOF(body) != EXTERNALSXP)) &&
@@ -1110,7 +1116,11 @@ static R_INLINE Rboolean R_CheckJIT(SEXP fun)
 	if (jit_strategy == STRATEGY_ALL_SMALL_MAYBE)
 	    if (score < MIN_JIT_SCORE) { SET_MAYBEJIT(fun); return FALSE; }
 
-	if (CLOENV(fun) == R_GlobalEnv) {
+	/* Determine if the function is toplevel. Toplevelfunction defined in
+	   packages have the namespace environment of their package as their
+	   enclosing environment. */
+	int const is_toplevel = (CLOENV(fun) == R_GlobalEnv) || R_IsNamespaceEnv(CLOENV(fun));
+	if (is_toplevel) {
 	    /* top level functions are only compiled if score is high enough */
 	    if (score < MIN_JIT_SCORE) {
 		if (jit_strategy == STRATEGY_TOP_SMALL_MAYBE)
@@ -5000,7 +5010,7 @@ static R_INLINE SEXP FIND_VAR_NO_CACHE(SEXP symbol, SEXP rho, SEXP cell,
 	SEXP value = R_GetVarLocValue(loc);
 	DECLNK_stack(stack_base, R_BCNodeStackTop);
 	return value;
-    }	
+    }
     else return R_GetVarLocValue(loc);
 }
 
