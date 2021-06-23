@@ -1214,6 +1214,9 @@ static R_INLINE Rboolean R_CheckJIT(SEXP fun)
 	    jit_strategy == STRATEGY_NO_CACHE)
 	    return TRUE;
 
+        if (externalCodeToExpr && TYPEOF(body) == BCODESXP)
+            body = R_BytecodeExpr(body);
+
 	int score = JIT_score(body);
 	if (jit_strategy == STRATEGY_ALL_SMALL_MAYBE)
 	    if (score < MIN_JIT_SCORE) { SET_MAYBEJIT(fun); return FALSE; }
