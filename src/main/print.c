@@ -499,7 +499,7 @@ static void PrintGenericVector(SEXP s, R_PrintData *data)
 	    printArray(t, dims, 0, Rprt_adj_left, names);
 	    UNPROTECT(1);
 	}
-	UNPROTECT(1);
+	UNPROTECT(2);
     }
     else { // no dim()
 	PROTECT(names = getAttrib(s, R_NamesSymbol));
