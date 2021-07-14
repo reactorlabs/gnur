@@ -1217,7 +1217,7 @@ SEXP attribute_hidden do_subset3(SEXP call, SEXP op, SEXP args, SEXP env)
 }
 
 /* used in eval.c */
-SEXP attribute_hidden R_subset3_dflt(SEXP x, SEXP input, SEXP call)
+SEXP R_subset3_dflt(SEXP x, SEXP input, SEXP call)
 {
     SEXP y, nlist;
     size_t slen;
