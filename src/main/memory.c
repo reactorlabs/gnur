@@ -2437,7 +2437,7 @@ SEXP cons(SEXP car, SEXP cdr)
     return s;
 }
 
-SEXP attribute_hidden CONS_NR(SEXP car, SEXP cdr)
+SEXP CONS_NR(SEXP car, SEXP cdr)
 {
     SEXP s;
     if (FORCE_GC || NO_FREE_NODES()) {

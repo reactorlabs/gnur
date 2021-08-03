@@ -383,7 +383,7 @@ SEXP matchArgs_NR(SEXP formals, SEXP supplied, SEXP call)
 }
 
 /* Use matchArgs_RC if the result might escape into R. */
-SEXP attribute_hidden matchArgs_RC(SEXP formals, SEXP supplied, SEXP call)
+SEXP matchArgs_RC(SEXP formals, SEXP supplied, SEXP call)
 {
     SEXP args = matchArgs_NR(formals, supplied, call);
     /* it would be better not to build this arglist with CONS_NR in
