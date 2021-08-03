@@ -112,6 +112,8 @@
 #include <Internal.h>
 
 SEXP materializeIfLazy(SEXP s) {
+    if (!s)
+        return NULL;
     return (TYPEOF(s) == EXTERNALSXP) ? externalMaterialize(s) : s;
 }
 

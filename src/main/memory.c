@@ -2560,6 +2560,7 @@ SEXP mkPROMISE(SEXP expr, SEXP rho)
     INIT_REFCNT(s);
     SET_TYPEOF(s, PROMSXP);
     PRCODE(s) = CHK(expr); INCREMENT_REFCNT(expr);
+    s->u.promsxp.env = NULL;
     SET_PRENV(s, rho); INCREMENT_REFCNT(rho);
     PRVALUE(s) = R_UnboundValue;
     PRSEEN(s) = 0;
