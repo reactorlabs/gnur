@@ -284,6 +284,9 @@ else
 	debugger_args="${debugger_args} --args"
       fi
       ;;
+    rr*)
+      args_ok=yes
+      ;;
     valgrind*)
       args_ok=yes
       ;;
