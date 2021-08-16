@@ -803,7 +803,7 @@ Rboolean R_ToplevelExec(void (*fun)(void *), void *data)
 
 /* Return the current environment. */
 SEXP R_GetCurrentEnv() {
-    return R_GlobalContext->sysparent;
+    return materializeIfLazy(R_GlobalContext->sysparent);
 }
 
 
