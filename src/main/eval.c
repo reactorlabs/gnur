@@ -626,7 +626,7 @@ static R_INLINE void INCLNK_stack_commit()
 	for (R_bcstack_t *p = base; p < top; p++) {
 	    if (p->tag == RAWMEM_TAG || p->tag == CACHESZ_TAG)
 		p += p->u.ival;
-	    else if (p->tag == 0)
+	    else if (p->tag == 0 && p->u.sxpval)
 		INCREMENT_LINKS(p->u.sxpval);
 	}
 	R_BCProtCommitted = R_BCProtTop;
@@ -640,7 +640,7 @@ static R_INLINE void DECLNK_stack(R_bcstack_t *base)
 	for (R_bcstack_t *p = base; p < top; p++) {
 	    if (p->tag == RAWMEM_TAG || p->tag == CACHESZ_TAG)
 		p += p->u.ival;
-	    else if (p->tag == 0)
+	    else if (p->tag == 0 && p->u.sxpval)
 		DECREMENT_LINKS(p->u.sxpval);
 	}
 	R_BCProtCommitted = base;
