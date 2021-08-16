@@ -539,11 +539,7 @@ typedef union { VECTOR_SEXPREC s; double align; } SEXPREC_ALIGN;
 #define BNDCELL_TAG(e)	((e)->sxpinfo.extra)
 #define SET_BNDCELL_TAG(e, v) ((e)->sxpinfo.extra = (v))
 
-#if ( SIZEOF_SIZE_T < SIZEOF_DOUBLE )
-# define BOXED_BINDING_CELLS 1
-#else
-# define BOXED_BINDING_CELLS 0
-#endif
+#define BOXED_BINDING_CELLS 1
 #if BOXED_BINDING_CELLS
 /* Use allocated scalars to hold immediate binding values. A little
    less efficient but does not change memory layout or use. These
