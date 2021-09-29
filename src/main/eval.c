@@ -36,6 +36,7 @@ static external_closure_call externalClosureCall = NULL;
 static external_promise_eval externalPromiseEval = NULL;
 static external_code_compile externalCodeCompile = NULL;
 static external_code_to_expr externalCodeToExpr = NULL;
+external_code_print externalCodePrint = NULL;
 external_code_read externalCodeRead = NULL;
 external_code_write externalCodeWrite = NULL;
 external_code_materialize externalMaterialize = NULL;
@@ -43,7 +44,8 @@ external_code_materialize externalMaterialize = NULL;
 void registerExternalCode(external_code_eval eval, external_closure_call call,
                           external_promise_eval prom,
                           external_code_compile compiler,
-                          external_code_to_expr toExpr, external_code_read read,
+                          external_code_to_expr toExpr,
+                          external_code_print print, external_code_read read,
                           external_code_write write,
                           external_code_materialize materialize) {
     externalCodeEval = eval;
@@ -51,11 +53,11 @@ void registerExternalCode(external_code_eval eval, external_closure_call call,
     externalPromiseEval = prom;
     externalCodeCompile = compiler;
     externalCodeToExpr = toExpr;
+    externalCodePrint = print;
     externalCodeRead = read;
     externalCodeWrite = write;
     externalMaterialize = materialize;
 }
-
 
 static SEXP bcEval(SEXP, SEXP, Rboolean);
 

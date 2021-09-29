@@ -383,7 +383,7 @@ static void save_tagbuf(char *save, size_t n)
     else
 	error("tagbuf overflow");
 }
-    
+
 static void PrintObject(SEXP s, R_PrintData *data)
 {
     /* Save the tagbuffer to restore indexing tags after evaluation
@@ -959,7 +959,7 @@ void attribute_hidden PrintValueRec(SEXP s, R_PrintData *data)
 	Rprintf("<bytecode: %p>\n", s);
 	break;
     case EXTERNALSXP:
-	Rprintf("<external code: %p>\n", s);
+	externalCodePrint(s);
 	break;
     case WEAKREFSXP:
 	Rprintf("<weak reference>\n");
