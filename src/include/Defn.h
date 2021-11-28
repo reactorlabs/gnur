@@ -575,7 +575,7 @@ LibExtern int R_interrupts_pending INI_as(0);
 LibExtern char *R_Home;		    /* Root of the R tree */
 
 /* Memory Management */
-R_size_t R_NSize  INI_as(R_NSIZE);/* Size of cons cell heap */
+extern R_size_t R_NSize  INI_as(R_NSIZE);/* Size of cons cell heap */
 extern0 R_size_t R_VSize  INI_as(R_VSIZE);/* Size of the vector heap */
 extern0 int	R_GCEnabled INI_as(1);
 extern0 int	R_in_gc INI_as(0);
