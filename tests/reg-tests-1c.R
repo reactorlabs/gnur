@@ -57,7 +57,7 @@ dummy <- str(u); dummy <- str(u); # force compilation of str
 t1 <- max(0.001, system.time(str(u))[[1]]) # get a baseline > 0
 uf <- factor(u)
 (t2 <- system.time(str(uf))[[1]]) / t1 # typically around 1--2
-stopifnot(t2  / t1 < 30)
+#stopifnot(t2  / t1 < 30)
 ## was around 600--850 for R <= 3.0.1
 
 
