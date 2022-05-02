@@ -1701,13 +1701,82 @@ void R_orderVector1(int *indx, int n, SEXP x,       Rboolean nalast, Rboolean de
 #endif
 
 
-// RIR: Moved here from Defn.h
+// =========== RIR: Moved here from Defn.h
 
 #ifdef __MAIN__
 #define externRir
 #else
 #define externRir extern
 #endif
+
+
+/* The type of the do_xxxx functions. */
+/* These are the built-in R functions. */
+typedef SEXP (*CCODE)(SEXP, SEXP, SEXP, SEXP);
+
+/* Information for Deparsing Expressions */
+typedef enum {
+    PP_INVALID  =  0,
+    PP_ASSIGN   =  1,
+    PP_ASSIGN2  =  2,
+    PP_BINARY   =  3,
+    PP_BINARY2  =  4,
+    PP_BREAK    =  5,
+    PP_CURLY    =  6,
+    PP_FOR      =  7,
+    PP_FUNCALL  =  8,
+    PP_FUNCTION =  9,
+    PP_IF 	= 10,
+    PP_NEXT 	= 11,
+    PP_PAREN    = 12,
+    PP_RETURN   = 13,
+    PP_SUBASS   = 14,
+    PP_SUBSET   = 15,
+    PP_WHILE 	= 16,
+    PP_UNARY 	= 17,
+    PP_DOLLAR 	= 18,
+    PP_FOREIGN 	= 19,
+    PP_REPEAT 	= 20
+} PPkind;
+
+typedef enum {
+    PREC_FN	 = 0,
+    PREC_EQ	 = 1,
+    PREC_LEFT    = 2,
+    PREC_RIGHT	 = 3,
+    PREC_TILDE	 = 4,
+    PREC_OR	 = 5,
+    PREC_AND	 = 6,
+    PREC_NOT	 = 7,
+    PREC_COMPARE = 8,
+    PREC_SUM	 = 9,
+    PREC_PROD	 = 10,
+    PREC_PERCENT = 11,
+    PREC_COLON	 = 12,
+    PREC_SIGN	 = 13,
+    PREC_POWER	 = 14,
+    PREC_SUBSET  = 15,
+    PREC_DOLLAR	 = 16,
+    PREC_NS	 = 17
+} PPprec;
+
+typedef struct {
+	PPkind kind; 	 /* deparse kind */
+	PPprec precedence; /* operator precedence */
+	unsigned int rightassoc;  /* right associative? */
+} PPinfo;
+
+/* The type definitions for the table of built-in functions. */
+/* This table can be found in ../main/names.c */
+typedef struct {
+    char   *name;    /* print name */
+    CCODE  cfun;     /* c-code address */
+    int	   code;     /* offset within c-code */
+    int	   eval;     /* evaluate args? */
+    int	   arity;    /* function arity */
+    PPinfo gram;     /* pretty-print info */
+} FUNTAB;
+
 
 /* The byte code engine uses a typed stack. The typed stack's entries
    consist of a tag and a union. An entry can represent a standard
@@ -1825,7 +1894,9 @@ BUI   0 0 0 0 0 0 0 1 = 64
 
 
 
-externRir SEXP	R_ReturnedValue;    /* Slot for return-ing values */
+externRir SEXP	R_ReturnedValue;    /* Slot for returning values */
+
+#ifndef R_NO_REMAP
 
 # define begincontext		Rf_begincontext
 # define ddfindVar		Rf_ddfindVar
@@ -1836,14 +1907,27 @@ externRir SEXP	R_ReturnedValue;    /* Slot for return-ing values */
 # define mkPROMISE		Rf_mkPROMISE
 # define usemethod		Rf_usemethod
 
-SEXP ddfindVar(SEXP, SEXP);
 void begincontext(RCNTXT*, int, SEXP, SEXP, SEXP, SEXP, SEXP);
+SEXP ddfindVar(SEXP, SEXP);
 void endcontext(RCNTXT*);
 void NORET findcontext(int, SEXP, SEXP);
 SEXP matchArgs_NR(SEXP, SEXP, SEXP);
 SEXP matchArgs_RC(SEXP, SEXP, SEXP);
 SEXP mkPROMISE(SEXP, SEXP);
 int usemethod(const char *, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP*);
+
+#else
+
+void Rf_begincontext(RCNTXT*, int, SEXP, SEXP, SEXP, SEXP, SEXP);
+SEXP Rf_ddfindVar(SEXP, SEXP);
+void Rf_endcontext(RCNTXT*);
+void NORET Rf_findcontext(int, SEXP, SEXP);
+SEXP Rf_matchArgs_NR(SEXP, SEXP, SEXP);
+SEXP Rf_matchArgs_RC(SEXP, SEXP, SEXP);
+SEXP Rf_mkPROMISE(SEXP, SEXP);
+int Rf_usemethod(const char *, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP*);
+
+#endif
 
 
 SEXP forcePromise(SEXP);
@@ -1895,6 +1979,8 @@ extern void registerExternalCode(external_code_eval, external_closure_call,
                                  external_code_to_expr, external_code_print,
                                  external_code_read, external_code_write,
                                  external_code_materialize);
+
+// =========== RIR: END Moved here from Defn.h
 
 /* Defining NO_RINLINEDFUNS disables use to simulate platforms where
    this is not available */
