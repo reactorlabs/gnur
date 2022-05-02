@@ -112,9 +112,7 @@
 #include <Internal.h>
 
 SEXP materializeIfLazy(SEXP s) {
-    if (!s)
-        return NULL;
-    return (TYPEOF(s) == EXTERNALSXP) ? externalMaterialize(s) : s;
+    return (s && TYPEOF(s) == EXTERNALSXP) ? externalMaterialize(s) : s;
 }
 
 /* R_run_onexits - runs the conexit/cend code for all contexts from

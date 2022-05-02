@@ -1351,7 +1351,6 @@ extern const char *locale2charset(const char *);
 
 // Helpers needed to interact with RIR
 SEXP materializeIfLazy(SEXP ctx);
-uint32_t traceableSEXPs(SEXP s);
 
 /*
    alloca is neither C99 nor POSIX.
