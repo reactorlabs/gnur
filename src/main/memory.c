@@ -1351,6 +1351,7 @@ static SEXP NewWeakRef(SEXP key, SEXP val, SEXP fin, Rboolean onexit)
     case ENVSXP:
     case EXTPTRSXP:
     case BCODESXP:
+    case EXTERNALSXP:
 	break;
     default: error(_("can only weakly reference/finalize reference objects"));
     }
