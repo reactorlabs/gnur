@@ -252,13 +252,13 @@ ALTREP_INSPECT(SEXP x, int pre, int deep, int pvec,
 }
 
 
-SEXP attribute_hidden
+SEXP
 ALTREP_SERIALIZED_STATE(SEXP x)
 {
     return ALTREP_DISPATCH(Serialized_state, x);
 }
 
-SEXP attribute_hidden
+SEXP
 ALTREP_SERIALIZED_CLASS(SEXP x)
 {
     SEXP val = ALTREP_CLASS_SERIALIZED_CLASS(ALTREP_CLASS(x));
