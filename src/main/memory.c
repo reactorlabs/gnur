@@ -3844,7 +3844,7 @@ static int nvec[32] = {
     1,1,1,1,1,1,1,1,
     1,0,0,1,1,0,0,0,
     0,1,1,0,0,1,1,0,
-    0,1,1,1,1,1,1,1
+    0,1,0,1,1,1,1,1
 };
 
 static R_INLINE SEXP CHK2(SEXP x)
@@ -3930,8 +3930,8 @@ void *(STDVEC_DATAPTR)(SEXP x)
 {
     if (ALTREP(x))
 	error("cannot get STDVEC_DATAPTR from ALTREP object");
-    if (! isVector(x) && TYPEOF(x) != WEAKREFSXP)
-	error("STDVEC_DATAPTR can only be applied to a vector, not a '%s'",
+    if (! isVector(x) && TYPEOF(x) != WEAKREFSXP && TYPEOF(x) != EXTERNALSXP)
+	error("STDVEC_DATAPTR can only be applied to a vector or RIR object, not a '%s'",
 	      type2char(TYPEOF(x)));
     CHKZLN(x);
     return STDVEC_DATAPTR(x);
