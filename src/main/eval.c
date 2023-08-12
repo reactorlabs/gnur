@@ -7883,7 +7883,7 @@ SEXP R_bcDecode(SEXP x) { return duplicate(x); }
 /* Add BCODESXP bc into the constants registry, performing a deep copy of the
    bc's constants */
 #define CONST_CHECK_COUNT 1000
-void attribute_hidden R_registerBC(SEXP bcBytes, SEXP bcode)
+void R_registerBC(SEXP bcBytes, SEXP bcode)
 {
     if (R_check_constants <= 0)
 	return;
