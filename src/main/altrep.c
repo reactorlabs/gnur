@@ -287,7 +287,7 @@ static SEXP ALTREP_UNSERIALIZE_CLASS(SEXP info)
     return NULL;
 }
 
-SEXP attribute_hidden
+SEXP
 ALTREP_UNSERIALIZE_EX(SEXP info, SEXP state, SEXP attr, int objf, int levs)
 {
     SEXP csym = ALTREP_SERIALIZED_CLASS_CLSSYM(info);
