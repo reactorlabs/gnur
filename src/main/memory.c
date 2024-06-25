@@ -35,7 +35,6 @@
 #endif
 
 #include <stdarg.h>
-
 #include <R_ext/RS.h> /* for S4 allocation */
 #include <R_ext/Print.h>
 
@@ -1023,7 +1022,7 @@ static void TryToReleasePages(void)
 
 	    maxrel = R_GenHeap[i].AllocCount;
 	    for (gen = 0; gen < NUM_OLD_GENERATIONS; gen++)
-		maxrel -= (int)((1.0 + R_MaxKeepFrac) * 
+		maxrel -= (int)((1.0 + R_MaxKeepFrac) *
 				R_GenHeap[i].OldCount[gen]);
 	    maxrel_pages = maxrel > 0 ? maxrel / page_count : 0;
 
@@ -2563,6 +2562,7 @@ SEXP mkPROMISE(SEXP expr, SEXP rho)
     s->u.promsxp.env = NULL;
     SET_PRENV(s, rho); INCREMENT_REFCNT(rho);
     PRVALUE(s) = R_UnboundValue;
+    PRCALLCTX(s) = 0;
     PRSEEN(s) = 0;
     ATTRIB(s) = R_NilValue;
     return s;
@@ -3085,7 +3085,7 @@ void attribute_hidden R_check_thread(const char *s)
     }
 }
 # else
-/* This could be implemented for Windows using their threading API */ 
+/* This could be implemented for Windows using their threading API */
 void attribute_hidden R_check_thread(const char *s) {}
 # endif
 #endif
@@ -3535,7 +3535,7 @@ void R_ReleaseObject(SEXP object)
 	int bin = PTRHASH(object) % PHASH_SIZE;
 	SET_VECTOR_ELT(R_PreciousList, bin,
 		       DeleteFromList(object,
-				      VECTOR_ELT(R_PreciousList, bin)));    
+				      VECTOR_ELT(R_PreciousList, bin)));
     }
     else
 	R_PreciousList =  DeleteFromList(object, R_PreciousList);
@@ -4391,11 +4391,13 @@ SEXP (PRCODE)(SEXP x) { return CHK(PRCODE(CHK(x))); }
 SEXP (PRENV)(SEXP x) { return CHK(PRENV(CHK(x))); }
 SEXP (PRVALUE)(SEXP x) { return CHK(PRVALUE(CHK(x))); }
 int (PRSEEN)(SEXP x) { return PRSEEN(CHK(x)); }
+unsigned long (PRCALLCTX)(SEXP x) { return PRCALLCTX(CHK(x)); }
 
 void (SET_PRENV)(SEXP x, SEXP v){ FIX_REFCNT(x, PRENV(x), v); CHECK_OLD_TO_NEW(x, v); x->u.promsxp.env = v; }
 void (SET_PRVALUE)(SEXP x, SEXP v) { FIX_REFCNT(x, PRVALUE(x), v); CHECK_OLD_TO_NEW(x, v); PRVALUE(x) = v; }
 void (SET_PRCODE)(SEXP x, SEXP v) { FIX_REFCNT(x, PRCODE(x), v); CHECK_OLD_TO_NEW(x, v); PRCODE(x) = v; }
 void (SET_PRSEEN)(SEXP x, int v) { SET_PRSEEN(CHK(x), v); }
+void (SET_PRCALLCTX)(SEXP x, unsigned long v) {  PRCALLCTX(x) = v; }
 
 /* Hashing Accessors */
 #ifdef TESTING_WRITE_BARRIER

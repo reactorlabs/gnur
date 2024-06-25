@@ -270,6 +270,7 @@ struct promsxp_struct {
     struct SEXPREC *value;
     struct SEXPREC *expr;
     struct SEXPREC *env;
+    unsigned long callCtx;
 };
 
 /* Every node must start with a set of sxpinfo flags and an attribute
@@ -963,10 +964,12 @@ SEXP (PRCODE)(SEXP x);
 SEXP (PRENV)(SEXP x);
 SEXP (PRVALUE)(SEXP x);
 int  (PRSEEN)(SEXP x);
+unsigned long (PRCALLCTX)(SEXP x);
 void (SET_PRSEEN)(SEXP x, int v);
 void SET_PRENV(SEXP x, SEXP v);
 void SET_PRVALUE(SEXP x, SEXP v);
 void SET_PRCODE(SEXP x, SEXP v);
+void SET_PRCALLCTX(SEXP x, unsigned long v);
 void SET_PRSEEN(SEXP x, int v);
 
 /* Hashing Functions */
