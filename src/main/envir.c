@@ -950,7 +950,7 @@ R_varloc_t R_findVarLocInFrame(SEXP rho, SEXP symbol)
     return val;
 }
 
-attribute_hidden
+//attribute_hidden
 SEXP R_GetVarLocValue(R_varloc_t vl)
 {
     SEXP cell = vl.cell;
@@ -3889,7 +3889,7 @@ SEXP attribute_hidden R_getNSValue(SEXP call, SEXP ns, SEXP name, int exported)
     SEXP exports = PROTECT(getVarValInFrame(info, R_exportsSymbol, FALSE));
     SEXP exportName = PROTECT(getVarValInFrame(exports, name, TRUE));
     if (exportName != R_UnboundValue) {
-	val = eval(checkVarName(call, exportName), ns);	
+	val = eval(checkVarName(call, exportName), ns);
 	UNPROTECT(4);  /* ns, info, exports, exportName */
 	return val;
     }
@@ -4409,4 +4409,3 @@ void attribute_hidden findFunctionForBody(SEXP body) {
 	}
     }
 }
-
