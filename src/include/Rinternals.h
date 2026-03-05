@@ -41,6 +41,7 @@ extern "C" {
 # include <stddef.h> /* for ptrdiff_t, which is required by C99 */
 #endif
 
+#include <stdint.h> /* for uint64_t */
 #include <R_ext/Arith.h>
 #include <R_ext/Boolean.h>
 #include <R_ext/Complex.h>
@@ -258,6 +259,7 @@ struct envsxp_struct {
     struct SEXPREC *frame;
     struct SEXPREC *enclos;
     struct SEXPREC *hashtab;
+    uint64_t recordTypeOnceBitmap;
 };
 
 struct closxp_struct {
